@@ -1,4 +1,5 @@
 import { groq } from "next-sanity";
+import { cacheLife, cacheTag } from "next/cache";
 import type { Certificate, Experience, Project, SiteSettings } from "@/types/sanity";
 import { client } from "./client";
 
@@ -27,7 +28,10 @@ const SITE_SETTINGS_QUERY = groq`
 `;
 
 export async function getSiteSettings(): Promise<SiteSettings | null> {
-  return client.fetch(SITE_SETTINGS_QUERY, {}, { next: { tags: ["siteSettings"] } });
+  "use cache";
+  cacheLife("days");
+  cacheTag("siteSettings");
+  return client.fetch(SITE_SETTINGS_QUERY);
 }
 
 // ── Projects ──────────────────────────────────────────────────────────────────
@@ -39,7 +43,10 @@ const ALL_PROJECTS_QUERY = groq`
 `;
 
 export async function getAllProjects(): Promise<Project[]> {
-  return client.fetch(ALL_PROJECTS_QUERY, {}, { next: { tags: ["project"] } });
+  "use cache";
+  cacheLife("hours");
+  cacheTag("project");
+  return client.fetch(ALL_PROJECTS_QUERY);
 }
 
 const PROJECT_BY_SLUG_QUERY = groq`
@@ -49,7 +56,10 @@ const PROJECT_BY_SLUG_QUERY = groq`
 `;
 
 export async function getProjectBySlug(slug: string): Promise<Project | null> {
-  return client.fetch(PROJECT_BY_SLUG_QUERY, { slug }, { next: { tags: [`project:${slug}`] } });
+  "use cache";
+  cacheLife("hours");
+  cacheTag("project", `project:${slug}`);
+  return client.fetch(PROJECT_BY_SLUG_QUERY, { slug });
 }
 
 const PROJECT_SLUGS_QUERY = groq`
@@ -57,10 +67,12 @@ const PROJECT_SLUGS_QUERY = groq`
 `;
 
 export async function getAllProjectSlugs(): Promise<{ slug: string }[]> {
-  return client.fetch(PROJECT_SLUGS_QUERY, {}, { next: { tags: ["project"] } });
+  "use cache";
+  cacheLife("hours");
+  cacheTag("project");
+  return client.fetch(PROJECT_SLUGS_QUERY);
 }
 
-// Slugs for adjacent navigation on project detail pages
 const PROJECT_NAV_QUERY = groq`
   *[_type == "project"] | order(order asc, publishedAt desc) {
     "slug": slug.current,
@@ -69,7 +81,10 @@ const PROJECT_NAV_QUERY = groq`
 `;
 
 export async function getProjectNav(): Promise<{ slug: string; title: string }[]> {
-  return client.fetch(PROJECT_NAV_QUERY, {}, { next: { tags: ["project"] } });
+  "use cache";
+  cacheLife("hours");
+  cacheTag("project");
+  return client.fetch(PROJECT_NAV_QUERY);
 }
 
 // ── Experience ────────────────────────────────────────────────────────────────
@@ -82,7 +97,10 @@ const ALL_EXPERIENCE_QUERY = groq`
 `;
 
 export async function getAllExperience(): Promise<Experience[]> {
-  return client.fetch(ALL_EXPERIENCE_QUERY, {}, { next: { tags: ["experience"] } });
+  "use cache";
+  cacheLife("hours");
+  cacheTag("experience");
+  return client.fetch(ALL_EXPERIENCE_QUERY);
 }
 
 // ── Certificates ──────────────────────────────────────────────────────────────
@@ -95,5 +113,8 @@ const ALL_CERTIFICATES_QUERY = groq`
 `;
 
 export async function getAllCertificates(): Promise<Certificate[]> {
-  return client.fetch(ALL_CERTIFICATES_QUERY, {}, { next: { tags: ["certificate"] } });
+  "use cache";
+  cacheLife("hours");
+  cacheTag("certificate");
+  return client.fetch(ALL_CERTIFICATES_QUERY);
 }

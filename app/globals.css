@@ -1,26 +1,68 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ── DEPARTURE MONO — self-hosted, user adds .woff2 to public/fonts/ ── */
+@font-face {
+  font-family: "Departure Mono";
+  src: url("/fonts/DepartureMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
+/* ── DESIGN TOKENS ── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: #0a0a0a;
+  --color-fg: #f2f0e9;
+  --color-accent: #e8ff00;
+  --color-border: #222222;
+  --color-dim: #141414;
+
+  --font-mono: var(--font-mono), "JetBrains Mono", monospace;
+  --font-display: "Departure Mono", "JetBrains Mono", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── RESET ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-mono);
+  cursor: none;
+  overflow-x: hidden;
+  border-radius: 0 !important;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Kill all border-radius globally */
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
+}
+
+a {
+  color: var(--color-fg);
+  cursor: none;
+}
+
+button {
+  cursor: none;
+}
+
+img,
+video,
+svg {
+  display: block;
+  max-width: 100%;
 }

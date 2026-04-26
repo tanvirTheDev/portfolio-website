@@ -4,17 +4,24 @@
  * Requires SANITY_API_TOKEN and NEXT_PUBLIC_SANITY_* in .env.local
  */
 
+import { createClient } from "@sanity/client";
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { createClient } from "@sanity/client";
 
 // ── Load .env.local ───────────────────────────────────────────────────────────
 
 try {
   const raw = readFileSync(resolve(process.cwd(), ".env.local"), "utf8");
-  for (const line of raw.split("\n")) {
-    const m = line.match(/^([^#=\s][^=]*)\s*=\s*(.*)$/);
-    if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, "");
+  // Split on CRLF or LF — .env.local on Windows has \r\n line endings
+  for (const line of raw.split(/\r?\n/)) {
+    const eq = line.indexOf("=");
+    if (eq < 1 || line.trimStart().startsWith("#")) continue;
+    const key = line.slice(0, eq).trim();
+    const val = line
+      .slice(eq + 1)
+      .trim()
+      .replace(/^["']|["']$/g, "");
+    if (key) process.env[key] = val;
   }
 } catch {
   // .env.local not found — rely on env already set in shell

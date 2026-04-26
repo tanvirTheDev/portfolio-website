@@ -36,7 +36,7 @@ export default function SideNav({ name, tagline }: Props) {
           <Link
             key={href}
             href={href}
-            className={`nav-item${isActive ? "active" : ""}`}
+            className={["nav-item", isActive ? "active" : ""].filter(Boolean).join(" ")}
             aria-current={isActive ? "page" : undefined}
             aria-label={`${key} — ${label}`}
           >

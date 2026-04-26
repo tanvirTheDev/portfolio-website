@@ -1,23 +1,115 @@
 import type { Metadata } from "next";
-import { getSiteSettings } from "@/lib/sanity/queries";
+import Link from "next/link";
+import { getSiteSettings, getAllProjects } from "@/lib/sanity/queries";
+import BuildStamp from "@/components/ui/BuildStamp";
 
-export const metadata: Metadata = {
-  title: "Index",
-};
+export const metadata: Metadata = { title: "Index" };
+
+const DIR_PAGES = [
+  { href: "/work", label: "WORK", idx: "002", desc: "Projects" },
+  { href: "/experience", label: "EXPERIENCE", idx: "003", desc: "Timeline" },
+  { href: "/certificates", label: "CERTIFICATES", idx: "004", desc: "Credentials" },
+  { href: "/blog", label: "BLOG", idx: "005", desc: "Writing" },
+  { href: "/contact", label: "CONTACT", idx: "006", desc: "Get in touch" },
+] as const;
 
 export default async function HomePage() {
-  const settings = await getSiteSettings().catch(() => null);
+  const [settings, projects] = await Promise.all([
+    getSiteSettings().catch(() => null),
+    getAllProjects().catch(() => []),
+  ]);
 
   return (
-    <div className="page" style={{ paddingTop: 60 }}>
-      <span className="slabel">001 / INDEX</span>
-      <h1 className="sec-title" style={{ marginBottom: 40 }}>
-        {settings?.name ?? "PORTFOLIO"}
-      </h1>
-      <p style={{ fontSize: 11, opacity: 0.5, letterSpacing: "0.1em" }}>
+    <div>
+      {/* ── PHYSICS STAGE (canvas injected in Phase 5 / KineticTitle) ── */}
+      <div
+        className="phys-stage"
+        style={{ height: "52vh", display: "flex", alignItems: "flex-end", padding: "32px 48px" }}
+        id="stage-wrap"
+      >
+        <div>
+          <span className="slabel">001 / INDEX</span>
+          <div
+            style={{
+              fontSize: "clamp(52px, 10vw, 128px)",
+              fontWeight: 800,
+              textTransform: "uppercase",
+              letterSpacing: "-0.02em",
+              lineHeight: 0.9,
+            }}
+          >
+            {settings?.name ?? "PORTFOLIO"}
+          </div>
+        </div>
+        <div className="phys-hint">DRAG / THROW / SCATTER ↑</div>
+      </div>
+
+      {/* ── DIRECTORY LISTING ── */}
+      <div className="manifest-hdr">
+        PORTFOLIO.MANIFEST &nbsp;·&nbsp;{" "}
+        <em style={{ color: "var(--accent)", fontStyle: "normal" }}>v1.0.0</em>
+        &nbsp;·&nbsp; <BuildStamp />
+      </div>
+
+      <div className="dir-head">
+        <span>IDX</span>
+        <span>PATH</span>
+        <span>ENTRIES</span>
+        <span>TYPE</span>
+        <span>DESC</span>
+      </div>
+
+      {/* Work row shows live project count */}
+      <Link
+        href="/work"
+        className="dir-row"
+        style={{
+          textDecoration: "none",
+          color: "inherit",
+          display: "grid",
+          gridTemplateColumns: "56px 1fr 90px 110px 120px",
+          padding: "13px 48px",
+          borderBottom: "1px solid var(--border)",
+          transition: "background 0.12s",
+        }}
+      >
+        <span className="di">002</span>
+        <span className="dn">/WORK</span>
+        <span className="ds">{projects.length} entries</span>
+        <span className="ds">PROJECTS</span>
+        <span className="dd">Full-stack builds</span>
+      </Link>
+
+      {DIR_PAGES.slice(1).map(({ href, label, idx, desc }) => (
+        <Link
+          key={href}
+          href={href}
+          className="dir-row"
+          style={{
+            textDecoration: "none",
+            color: "inherit",
+            display: "grid",
+            gridTemplateColumns: "56px 1fr 90px 110px 120px",
+            padding: "13px 48px",
+            borderBottom: "1px solid var(--border)",
+            transition: "background 0.12s",
+          }}
+        >
+          <span className="di">{idx}</span>
+          <span className="dn">/{label}</span>
+          <span className="ds">—</span>
+          <span className="ds">{label}</span>
+          <span className="dd">{desc}</span>
+        </Link>
+      ))}
+
+      {/* Decorative overflow text */}
+      <div
+        className="deco"
+        style={{ position: "relative", marginTop: 0, padding: "0 48px", overflow: "hidden" }}
+      >
         {settings?.tagline ?? "FULL-STACK DEVELOPER"}
-      </p>
-      {/* Full home page content wired in Phase 4 */}
+      </div>
     </div>
   );
 }

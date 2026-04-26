@@ -6,6 +6,7 @@ import { env } from "./env";
 export default defineConfig({
   name: "portfolio",
   title: "Portfolio Studio",
+  basePath: "/studio",
   projectId: env.NEXT_PUBLIC_SANITY_PROJECT_ID,
   dataset: env.NEXT_PUBLIC_SANITY_DATASET,
   plugins: [

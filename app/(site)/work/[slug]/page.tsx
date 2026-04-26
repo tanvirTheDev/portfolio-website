@@ -41,8 +41,14 @@ export default async function ProjectDetailPage({ params }: Props) {
       </Link>
 
       {/* Header */}
-      <div className="proj-name">{project.title}</div>
-      {project.tagline && <div className="proj-tagline">{project.tagline}</div>}
+      <div className="proj-name" data-reveal="">
+        {project.title}
+      </div>
+      {project.tagline && (
+        <div className="proj-tagline" data-reveal="">
+          {project.tagline}
+        </div>
+      )}
 
       {/* Stack tags */}
       {project.stack?.length && (
@@ -106,7 +112,7 @@ export default async function ProjectDetailPage({ params }: Props) {
 
       {/* Problem */}
       {project.problem?.length ? (
-        <div className="proj-sec">
+        <div className="proj-sec" data-reveal="">
           <span className="proj-sec-label">THE PROBLEM</span>
           <PortableText value={project.problem} className="proj-body" />
         </div>
@@ -114,7 +120,7 @@ export default async function ProjectDetailPage({ params }: Props) {
 
       {/* Features */}
       {project.features?.length ? (
-        <div className="proj-sec">
+        <div className="proj-sec" data-reveal="">
           <span className="proj-sec-label">KEY FEATURES</span>
           <ul className="features">
             {project.features.map((f, i) => (
@@ -129,7 +135,7 @@ export default async function ProjectDetailPage({ params }: Props) {
 
       {/* Challenges */}
       {project.challenges?.length ? (
-        <div className="proj-sec">
+        <div className="proj-sec" data-reveal="">
           <span className="proj-sec-label">CHALLENGES</span>
           <PortableText value={project.challenges} className="proj-body" />
         </div>
@@ -137,7 +143,7 @@ export default async function ProjectDetailPage({ params }: Props) {
 
       {/* Architecture */}
       {project.architecture?.length ? (
-        <div className="proj-sec">
+        <div className="proj-sec" data-reveal="">
           <span className="proj-sec-label">ARCHITECTURE</span>
           <PortableText value={project.architecture} className="arch-box" />
         </div>

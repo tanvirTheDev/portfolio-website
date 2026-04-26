@@ -8,8 +8,10 @@ export default async function ExperiencePage() {
 
   return (
     <div className="page" style={{ paddingTop: 60 }}>
-      <span className="slabel">003 / EXPERIENCE</span>
-      <h1 className="sec-title" style={{ marginBottom: 48 }}>
+      <span className="slabel" data-reveal="">
+        003 / EXPERIENCE
+      </span>
+      <h1 className="sec-title" style={{ marginBottom: 48 }} data-reveal="">
         WORK
         <br />
         HISTORY
@@ -22,7 +24,7 @@ export default async function ExperiencePage() {
       )}
 
       {experience.map((entry) => (
-        <div key={entry._id} className="exp-entry">
+        <div key={entry._id} className="exp-entry" data-reveal="">
           {/* Left column: company + meta */}
           <div>
             <div className="exp-co">{entry.company}</div>

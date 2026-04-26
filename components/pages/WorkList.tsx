@@ -39,6 +39,7 @@ export default function WorkList({ projects }: Props) {
               className={hovered?._id === p._id ? "hov" : ""}
               onMouseEnter={() => setHovered(p)}
               onMouseLeave={() => setHovered(null)}
+              data-reveal=""
             >
               <td className="td-idx">{String(i + 1).padStart(3, "0")}</td>
               <td className="td-name">

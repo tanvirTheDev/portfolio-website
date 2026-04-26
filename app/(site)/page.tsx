@@ -45,7 +45,7 @@ export default async function HomePage() {
       </div>
 
       {/* ── DIRECTORY LISTING ── */}
-      <div className="manifest-hdr">
+      <div className="manifest-hdr" data-reveal="">
         PORTFOLIO.MANIFEST &nbsp;·&nbsp;{" "}
         <em style={{ color: "var(--accent)", fontStyle: "normal" }}>v1.0.0</em>
         &nbsp;·&nbsp; <BuildStamp />

@@ -11,7 +11,7 @@ export default async function BlogPage() {
   return (
     <div className="page" style={{ paddingTop: 60 }}>
       <span className="slabel">005 / BLOG</span>
-      <h1 className="sec-title" style={{ marginBottom: 40 }}>
+      <h1 className="sec-title" style={{ marginBottom: 40 }} data-reveal="">
         WRITING
       </h1>
 
@@ -30,6 +30,7 @@ export default async function BlogPage() {
               target="_blank"
               rel="noopener noreferrer"
               className="blog-row"
+              data-reveal=""
             >
               <div className="blog-num">{String(i + 1).padStart(2, "0")}</div>
               <div className="blog-body">

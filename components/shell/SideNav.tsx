@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SoundToggle from "./SoundToggle";
+import MagneticLink from "@/components/motion/MagneticLink";
 
 const NAV_ITEMS = [
   { label: "INDEX", href: "/", key: "1" },
@@ -23,11 +24,13 @@ export default function SideNav({ name, tagline }: Props) {
 
   return (
     <nav className="side-nav" aria-label="Primary navigation">
-      {/* Logo / identity */}
-      <div className="nav-logo">
-        {name}
-        {tagline && <span className="nav-subtitle">{tagline}</span>}
-      </div>
+      {/* Logo / identity — magnetic on hover */}
+      <MagneticLink strength={0.2} style={{ display: "block" }}>
+        <div className="nav-logo">
+          {name}
+          {tagline && <span className="nav-subtitle">{tagline}</span>}
+        </div>
+      </MagneticLink>
 
       {/* Nav links */}
       {NAV_ITEMS.map(({ label, href, key }) => {

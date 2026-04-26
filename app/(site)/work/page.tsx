@@ -21,8 +21,10 @@ export default async function WorkPage() {
         }}
       >
         <div>
-          <span className="slabel">002 / WORK</span>
-          <h1 className="sec-title">
+          <span className="slabel" data-reveal="">
+            002 / WORK
+          </span>
+          <h1 className="sec-title" data-reveal="">
             SPECIMEN
             <br />
             ARCHIVE

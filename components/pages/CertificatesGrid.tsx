@@ -17,6 +17,7 @@ export default function CertificatesGrid({ certs }: { certs: Certificate[] }) {
             className="cert-card"
             onClick={() => setActive(c)}
             aria-label={`Open ${c.name}`}
+            data-reveal=""
           >
             <span className="cert-id">CERT-{String(i + 1).padStart(3, "0")}</span>
             <div className="cert-name">{c.name}</div>

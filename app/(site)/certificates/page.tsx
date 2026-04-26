@@ -9,8 +9,10 @@ export default async function CertificatesPage() {
 
   return (
     <div className="page" style={{ paddingTop: 60 }}>
-      <span className="slabel">004 / CERTIFICATES</span>
-      <h1 className="sec-title" style={{ marginBottom: 8 }}>
+      <span className="slabel" data-reveal="">
+        004 / CERTIFICATES
+      </span>
+      <h1 className="sec-title" style={{ marginBottom: 8 }} data-reveal="">
         CREDENTIALS
       </h1>
       <p

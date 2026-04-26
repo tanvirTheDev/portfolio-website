@@ -1,0 +1,55 @@
+/* Physics stage — CSS Module for KineticTitle component */
+
+.stage {
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.hint {
+  position: absolute;
+  bottom: 10px;
+  right: 18px;
+  font-size: 7px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.2;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.decoOverflow {
+  font-size: clamp(70px, 12vw, 160px);
+  font-weight: 800;
+  white-space: nowrap;
+  text-transform: uppercase;
+  opacity: 0.025;
+  position: absolute;
+  bottom: 10px;
+  left: -10px;
+  pointer-events: none;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  z-index: 0;
+}
+
+/* Static fallback rendered on mobile (< 1024px) */
+.staticTitle {
+  display: flex;
+  align-items: flex-end;
+  padding: 40px 48px 32px;
+  font-size: clamp(52px, 10vw, 128px);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+}

@@ -1,0 +1,41 @@
+/* Cursor component — CSS Module
+   IDs in globals.css (#cur, #dot) handle the global cursor.
+   This module provides the class-based API for the React Cursor component. */
+
+.cursor {
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--fg);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.12s,
+    height 0.12s,
+    border-color 0.12s,
+    background 0.12s;
+  will-change: left, top;
+}
+
+.cursorHover {
+  width: 30px;
+  height: 30px;
+  background: var(--accent);
+  border-color: var(--accent);
+  mix-blend-mode: difference;
+}
+
+.dot {
+  width: 3px;
+  height: 3px;
+  background: var(--accent);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}

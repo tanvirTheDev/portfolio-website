@@ -1,14 +1,24 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google";
+// import localFont from "next/font/local";
 import "./globals.css";
 
 const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-mono",
+  variable: "--font-jetbrains",
   subsets: ["latin"],
   weight: ["400", "700", "800"],
   style: ["normal", "italic"],
   display: "swap",
 });
+
+// Uncomment once public/fonts/DepartureMono-Regular.woff2 is in place:
+// const departureMono = localFont({
+//   src: "../public/fonts/DepartureMono-Regular.woff2",
+//   variable: "--font-departure",
+//   weight: "400",
+//   style: "normal",
+//   display: "swap",
+// });
 
 export const metadata: Metadata = {
   title: "Portfolio",

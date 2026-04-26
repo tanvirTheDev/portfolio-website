@@ -1,0 +1,13 @@
+/* Grid background overlay — CSS Module */
+
+.gridBg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 72px 72px;
+  opacity: 0.22;
+}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google";
-// import localFont from "next/font/local";
+import localFont from "next/font/local";
 import "./globals.css";
 
 const jetbrainsMono = JetBrains_Mono({
@@ -11,14 +11,13 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-// Uncomment once public/fonts/DepartureMono-Regular.woff2 is in place:
-// const departureMono = localFont({
-//   src: "../public/fonts/DepartureMono-Regular.woff2",
-//   variable: "--font-departure",
-//   weight: "400",
-//   style: "normal",
-//   display: "swap",
-// });
+const departureMono = localFont({
+  src: "../public/fonts/DepartureMono-Regular.woff2",
+  variable: "--font-departure",
+  weight: "400",
+  style: "normal",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Portfolio",
@@ -27,7 +26,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={jetbrainsMono.variable}>
+    <html lang="en" className={`${jetbrainsMono.variable} ${departureMono.variable}`}>
       <body>{children}</body>
     </html>
   );

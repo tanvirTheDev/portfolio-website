@@ -1,0 +1,79 @@
+import type { PortableTextBlock } from "sanity";
+
+// ── Shared ────────────────────────────────────────────────────────────────────
+
+export type SanitySlug = { current: string };
+
+export type SanityImage = {
+  _type: "image";
+  asset: { _ref: string; _type: "reference" };
+  hotspot?: { x: number; y: number; height: number; width: number };
+};
+
+// ── Project ───────────────────────────────────────────────────────────────────
+
+export type ProjectStatus = "SHIPPED" | "OPEN SOURCE" | "BETA" | "ARCHIVED";
+
+export type Project = {
+  _id: string;
+  _type: "project";
+  title: string;
+  slug: SanitySlug;
+  tagline?: string;
+  status: ProjectStatus;
+  year?: string;
+  order?: number;
+  publishedAt?: string;
+  thumbnail?: SanityImage;
+  youtubeId?: string;
+  liveUrl?: string;
+  githubUrl?: string;
+  stack?: string[];
+  features?: string[];
+  problem?: PortableTextBlock[];
+  challenges?: PortableTextBlock[];
+  architecture?: PortableTextBlock[];
+};
+
+// ── Experience ────────────────────────────────────────────────────────────────
+
+export type Experience = {
+  _id: string;
+  _type: "experience";
+  company: string;
+  title: string;
+  dateStart: string;
+  dateEnd?: string;
+  location?: string;
+  order?: number;
+  bullets?: string[];
+  stack?: string[];
+};
+
+// ── Certificate ───────────────────────────────────────────────────────────────
+
+export type Certificate = {
+  _id: string;
+  _type: "certificate";
+  name: string;
+  issuer: string;
+  date?: string;
+  credentialId: string;
+  verifyUrl?: string;
+  image?: SanityImage;
+  order?: number;
+};
+
+// ── Site Settings ─────────────────────────────────────────────────────────────
+
+export type SiteSettings = {
+  _id: string;
+  _type: "siteSettings";
+  name: string;
+  tagline?: string;
+  email?: string;
+  githubUrl?: string;
+  linkedinUrl?: string;
+  mediumUsername?: string;
+  resumeFile?: { asset: { url: string } };
+};

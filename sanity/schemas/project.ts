@@ -76,16 +76,23 @@ export const project = defineType({
     }),
     defineField({
       name: "youtubeId",
-      title: "YouTube Video ID",
+      title: "YouTube URL or Video ID",
       type: "string",
       group: "media",
-      description: "Just the 11-character ID, e.g. dQw4w9WgXcQ",
+      description:
+        "Paste the full YouTube URL (youtube.com/watch?v=… or youtu.be/…) OR just the 11-character video ID.",
       validation: (r) =>
         r.custom((val) => {
           if (!val) return true;
-          return /^[a-zA-Z0-9_-]{11}$/.test(val)
-            ? true
-            : "Must be an 11-character YouTube video ID";
+          // Accept bare 11-char ID
+          if (/^[a-zA-Z0-9_-]{11}$/.test(val)) return true;
+          // Accept full youtube.com/watch URLs
+          if (/youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]{11})/.test(val)) return true;
+          // Accept youtu.be short URLs
+          if (/youtu\.be\/([a-zA-Z0-9_-]{11})/.test(val)) return true;
+          // Accept youtube.com/embed URLs
+          if (/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/.test(val)) return true;
+          return "Must be a YouTube URL or 11-character video ID";
         }),
     }),
     defineField({

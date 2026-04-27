@@ -4,6 +4,29 @@ import { notFound } from "next/navigation";
 import { getProjectBySlug, getAllProjectSlugs, getProjectNav } from "@/lib/sanity/queries";
 import PortableText from "@/components/ui/PortableText";
 
+/**
+ * Extract an 11-char YouTube video ID from any of:
+ *   - bare ID:              dQw4w9WgXcQ
+ *   - watch URL:            https://www.youtube.com/watch?v=dQw4w9WgXcQ
+ *   - short URL:            https://youtu.be/dQw4w9WgXcQ
+ *   - embed URL:            https://www.youtube.com/embed/dQw4w9WgXcQ
+ */
+function extractYouTubeId(raw: string): string | null {
+  if (!raw) return null;
+  // Already a bare ID
+  if (/^[a-zA-Z0-9_-]{11}$/.test(raw.trim())) return raw.trim();
+  // watch?v=
+  const watch = raw.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (watch) return watch[1];
+  // youtu.be/
+  const short = raw.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (short) return short[1];
+  // embed/
+  const embed = raw.match(/embed\/([a-zA-Z0-9_-]{11})/);
+  if (embed) return embed[1];
+  return null;
+}
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
@@ -29,6 +52,7 @@ export default async function ProjectDetailPage({ params }: Props) {
 
   if (!project) notFound();
 
+  const videoId = project.youtubeId ? extractYouTubeId(project.youtubeId) : null;
   const idx = navList.findIndex((n) => n.slug === slug);
   const prev = idx > 0 ? navList[idx - 1] : null;
   const next = idx < navList.length - 1 ? navList[idx + 1] : null;
@@ -71,10 +95,10 @@ export default async function ProjectDetailPage({ params }: Props) {
       )}
 
       {/* YouTube embed */}
-      {project.youtubeId && (
-        <div className="video-wrap">
+      {videoId && (
+        <div className="video-wrap" data-reveal="">
           <iframe
-            src={`https://www.youtube.com/embed/${project.youtubeId}`}
+            src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
             title={`${project.title} demo`}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen

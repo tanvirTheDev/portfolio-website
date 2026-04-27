@@ -43,5 +43,4 @@ next-env.d.ts
 # sanity
 .sanity/
 
-# fonts (user-supplied, not committed)
-public/fonts/*.woff2
+# fonts — committed so Vercel can resolve them at build time

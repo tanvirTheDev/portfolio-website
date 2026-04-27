@@ -24,6 +24,11 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
 
   return (
     <MotionProvider>
+      {/* Skip-to-content for keyboard / screen-reader users */}
+      <a href="#main-content" className="skip-link">
+        Skip to content
+      </a>
+
       {/* Fixed chrome — never transitions */}
       <GridBg />
       <DocStrip />
@@ -37,11 +42,11 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       {/* Page content with enter animation.
           Suspense boundary required because framer-motion's AnimatePresence
           calls Math.random() internally — Next.js 16 PPR flags this otherwise. */}
-      <div className="main">
+      <main id="main-content" className="main">
         <Suspense>
           <PageTransition>{children}</PageTransition>
         </Suspense>
-      </div>
+      </main>
     </MotionProvider>
   );
 }

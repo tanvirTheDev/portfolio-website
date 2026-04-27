@@ -18,7 +18,7 @@ export type Project = {
   _id: string;
   _type: "project";
   title: string;
-  slug: SanitySlug;
+  slug: string; // GROQ returns slug.current as a plain string
   tagline?: string;
   status: ProjectStatus;
   year?: string;

@@ -43,10 +43,7 @@ export default function WorkList({ projects }: Props) {
             >
               <td className="td-idx">{String(i + 1).padStart(3, "0")}</td>
               <td className="td-name">
-                <Link
-                  href={`/work/${p.slug.current}`}
-                  style={{ textDecoration: "none", color: "inherit" }}
-                >
+                <Link href={`/work/${p.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
                   {p.title}
                 </Link>
               </td>
@@ -94,7 +91,7 @@ export default function WorkList({ projects }: Props) {
             {hovered.stack?.length ? `\n${hovered.stack.slice(0, 4).join(" · ")}` : ""}
           </div>
 
-          <Link href={`/work/${hovered.slug.current}`} className="panel-open-btn">
+          <Link href={`/work/${hovered.slug}`} className="panel-open-btn">
             OPEN →
           </Link>
         </div>

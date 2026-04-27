@@ -17,6 +17,7 @@
     "@gsap/react": "^2.1.2",
     "@sanity/client": "^6.28.2",
     "@sanity/image-url": "^1.1.0",
+    "@types/three": "^0.184.0",
     "clsx": "^2.1.1",
     "fast-xml-parser": "^4.5.3",
     "framer-motion": "^11.18.2",
@@ -32,6 +33,7 @@
     "sharp": "^0.34.5",
     "styled-components": "^6.4.1",
     "tailwind-merge": "^2.6.0",
+    "three": "^0.184.0",
     "zod": "^3.24.4"
   },
   "devDependencies": {

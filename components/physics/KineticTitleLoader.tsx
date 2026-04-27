@@ -15,8 +15,9 @@ const KineticTitle = dynamic(() => import("./KineticTitle"), {
   loading: () => (
     <div
       style={{
-        height: "52vh",
+        height: "58vh", // matches .stage in physics.module.css
         borderBottom: "1px solid var(--border)",
+        flexShrink: 0,
       }}
     />
   ),

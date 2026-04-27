@@ -1,61 +1,45 @@
 "use client";
 
 /**
- * KineticTitle — Matter.js physics typography
+ * KineticTitle — exact port of portfolio.html physics stage
  *
- * Each character of `text` becomes a rectangular rigid body that falls,
- * bounces, and can be grabbed / thrown by the user.
+ * Letters spawn ABOVE the canvas and fall under gravity.
+ * Drawn with glow shadow + accent stroke (no rectangles).
+ * MouseConstraint drag (stiffness 0.25), cursor repulsion,
+ * click-to-scatter, and a Three.js blueprint background.
  *
- * This file is ALWAYS imported via next/dynamic with { ssr: false },
- * so a top-level Matter.js import is safe — it never runs on the server.
+ * Always loaded via next/dynamic({ ssr: false }) — safe to
+ * use top-level Matter / Three imports here.
  */
 
 import Matter from "matter-js";
+import * as THREE from "three";
 import { useEffect, useRef, useState } from "react";
 import styles from "@/styles/physics.module.css";
 
-// ── Constants ──────────────────────────────────────────────────────────────
+// ── Constants (match HTML exactly) ─────────────────────────────────────────
 const DESKTOP_PX = 1024;
-const PADDING = 10; // horizontal padding inside each letter body
-const GAP = 6; // gap between adjacent letter bodies
-const GRAVITY_Y = 1.5;
-const RESTITUTION = 0.32;
-const FRICTION = 0.08;
-const FRICTION_AIR = 0.018;
 
-// Colours (matching CSS vars — read as literals so canvas can use them)
+// Colours
 const C_FG = "#F2F0E9";
-const C_ACCENT = "#E8FF00";
-const C_BOX = "rgba(242,240,233,0.10)";
-const C_BOX_ACTIVE = "rgba(232,255,0,0.10)";
-const C_BORDER = "rgba(242,240,233,0.14)";
-const C_BORDER_ACTIVE = "#E8FF00";
-
-// ── Types ──────────────────────────────────────────────────────────────────
-interface LetterBody {
-  body: Matter.Body;
-  ch: string;
-  bW: number; // body width  (physics)
-  bH: number; // body height (physics)
-}
+const GLOW_COLOR = "#E8FF00";
+const STROKE_COLOR = "rgba(232,255,0,.35)";
 
 interface Props {
-  /** The name / word to render as physics bodies. Rendered uppercase. */
   text: string;
 }
 
-// ── Component ──────────────────────────────────────────────────────────────
 export default function KineticTitle({ text }: Props) {
-  // Initialise synchronously on client so there's no null/flash on first render
   const [isDesktop, setIsDesktop] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.innerWidth >= DESKTOP_PX;
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const glCanvasRef = useRef<HTMLCanvasElement>(null); // Three.js blueprint bg
+  const phyCanvasRef = useRef<HTMLCanvasElement>(null); // Matter.js physics
 
-  // ── Viewport watcher ────────────────────────────────────────────────────
+  // ── Viewport watcher ─────────────────────────────────────────────────────
   useEffect(() => {
     const mq = window.matchMedia(`(min-width: ${DESKTOP_PX}px)`);
     const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
@@ -63,261 +47,314 @@ export default function KineticTitle({ text }: Props) {
     return () => mq.removeEventListener("change", handler);
   }, []);
 
-  // ── Physics engine ───────────────────────────────────────────────────────
+  // ── Three.js blueprint background ────────────────────────────────────────
   useEffect(() => {
     if (!isDesktop) return;
-    if (!containerRef.current || !canvasRef.current) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const wrap = containerRef.current;
+    const canvas = glCanvasRef.current;
+    if (!wrap || !canvas) return;
 
-    const container = containerRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const W = wrap.offsetWidth;
+    const H = wrap.offsetHeight;
 
-    // ── Sizing ─────────────────────────────────────────────────────────────
-    const W = container.offsetWidth;
-    const H = container.offsetHeight;
-    canvas.width = W;
-    canvas.height = H;
-    canvas.style.width = `${W}px`;
-    canvas.style.height = `${H}px`;
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(W, H);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 
-    // Font size: 10vw clamped to [52, 120]
-    const fontSize = Math.max(52, Math.min(120, W * 0.1));
-    const fontStr = `800 ${fontSize}px "JetBrains Mono", monospace`;
-    const chars = text.toUpperCase().split("");
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 100);
+    camera.position.set(0, 3, 8);
+    camera.lookAt(0, 0, 0);
 
-    // ── Measure each character ─────────────────────────────────────────────
-    ctx.font = fontStr;
-    const bH = fontSize * 1.28; // body height — covers cap-height + descent
-
-    const charMetrics = chars.map((ch) => ({
-      ch,
-      cw: Math.ceil(ctx.measureText(ch).width), // character advance width
-    }));
-
-    const totalW =
-      charMetrics.reduce((acc, { cw }) => acc + cw + PADDING * 2, 0) +
-      Math.max(0, chars.length - 1) * GAP;
-
-    // ── Engine + World ─────────────────────────────────────────────────────
-    const engine = Matter.Engine.create({
-      gravity: { x: 0, y: GRAVITY_Y },
+    // Blueprint grid — XZ plane
+    const gridGeo = new THREE.BufferGeometry();
+    const lines: number[] = [];
+    const N = 24;
+    const SIZE = 20;
+    for (let i = -N; i <= N; i++) {
+      const t = (i / N) * SIZE;
+      lines.push(-SIZE, 0, t, SIZE, 0, t);
+      lines.push(t, 0, -SIZE, t, 0, SIZE);
+    }
+    gridGeo.setAttribute("position", new THREE.Float32BufferAttribute(lines, 3));
+    const gridMat = new THREE.LineBasicMaterial({
+      color: 0xe8ff00,
+      transparent: true,
+      opacity: 0.5,
     });
-    const world = engine.world;
+    scene.add(new THREE.LineSegments(gridGeo, gridMat));
 
-    // ── Letter bodies ──────────────────────────────────────────────────────
-    let cx = (W - totalW) / 2;
-    const letterBodies: LetterBody[] = charMetrics.map(({ ch, cw }) => {
-      const bW = cw + PADDING * 2;
-      const startX = cx + bW / 2;
-      // Scatter Y slightly for a natural "drop" feel
-      const startY = H * 0.12 + Math.random() * H * 0.1;
-      cx += bW + GAP;
-
-      const body = Matter.Bodies.rectangle(startX, startY, bW, bH, {
-        label: ch,
-        restitution: RESTITUTION,
-        friction: FRICTION,
-        frictionAir: FRICTION_AIR,
-      });
-
-      return { body, ch, bW, bH };
+    // Wireframe rotating box
+    const boxGeo = new THREE.BoxGeometry(2.2, 2.2, 2.2);
+    const boxEdge = new THREE.EdgesGeometry(boxGeo);
+    const boxMat = new THREE.LineBasicMaterial({
+      color: 0xe8ff00,
+      transparent: true,
+      opacity: 0.6,
     });
+    const box = new THREE.LineSegments(boxEdge, boxMat);
+    box.position.set(3, 0.5, 0);
+    scene.add(box);
 
-    Matter.Composite.add(
-      world,
-      letterBodies.map((l) => l.body)
-    );
-
-    // ── Static boundaries ──────────────────────────────────────────────────
-    const wallOpts: Matter.IBodyDefinition = {
-      isStatic: true,
-      friction: 0.5,
-      restitution: 0.3,
-      label: "wall",
-    };
-    Matter.Composite.add(world, [
-      Matter.Bodies.rectangle(W / 2, H + 30, W + 200, 60, wallOpts), // floor
-      Matter.Bodies.rectangle(-30, H / 2, 60, H * 3, wallOpts), // left wall
-      Matter.Bodies.rectangle(W + 30, H / 2, 60, H * 3, wallOpts), // right wall
-      Matter.Bodies.rectangle(W / 2, -30, W + 200, 60, wallOpts), // ceiling
-    ]);
-
-    // ── Manual drag (avoids Matter.Mouse wheel-event hijacking) ────────────
-    let activeConstraint: Matter.Constraint | null = null;
-    let activeBody: Matter.Body | null = null;
-    let prevMX = 0;
-    let prevMY = 0;
-    let velMX = 0;
-    let velMY = 0;
-
-    const toCanvas = (clientX: number, clientY: number) => {
-      const r = canvas.getBoundingClientRect();
-      return { x: clientX - r.left, y: clientY - r.top };
-    };
-
-    const grab = (clientX: number, clientY: number) => {
-      const { x, y } = toCanvas(clientX, clientY);
-      const hit = Matter.Query.point(
-        letterBodies.map((l) => l.body),
-        { x, y }
-      );
-      if (!hit.length) return;
-
-      const target = hit[0];
-      const offset = {
-        x: x - target.position.x,
-        y: y - target.position.y,
-      };
-      activeConstraint = Matter.Constraint.create({
-        bodyA: target,
-        pointA: offset,
-        pointB: { x, y },
-        stiffness: 0.22,
-        length: 0,
-      });
-      Matter.Composite.add(world, activeConstraint);
-      activeBody = target;
-      prevMX = x;
-      prevMY = y;
-      velMX = 0;
-      velMY = 0;
-    };
-
-    const move = (clientX: number, clientY: number) => {
-      const { x, y } = toCanvas(clientX, clientY);
-      velMX = x - prevMX;
-      velMY = y - prevMY;
-      prevMX = x;
-      prevMY = y;
-      if (activeConstraint) {
-        (activeConstraint as Matter.Constraint & { pointB: Matter.Vector }).pointB = { x, y };
-      }
-    };
-
-    const release = () => {
-      if (activeBody) {
-        Matter.Body.setVelocity(activeBody, {
-          x: velMX * 0.55,
-          y: velMY * 0.55,
-        });
-      }
-      if (activeConstraint) {
-        Matter.Composite.remove(world, activeConstraint);
-        activeConstraint = null;
-      }
-      activeBody = null;
-    };
-
-    // Mouse
-    const onMD = (e: MouseEvent) => grab(e.clientX, e.clientY);
-    const onMM = (e: MouseEvent) => move(e.clientX, e.clientY);
-    const onMU = () => release();
-
-    // Touch
-    const onTS = (e: TouchEvent) => {
-      e.preventDefault();
-      grab(e.touches[0].clientX, e.touches[0].clientY);
-    };
-    const onTM = (e: TouchEvent) => {
-      e.preventDefault();
-      move(e.touches[0].clientX, e.touches[0].clientY);
-    };
-    const onTE = () => release();
-
-    canvas.addEventListener("mousedown", onMD);
-    window.addEventListener("mousemove", onMM);
-    window.addEventListener("mouseup", onMU);
-    canvas.addEventListener("touchstart", onTS, { passive: false });
-    canvas.addEventListener("touchmove", onTM, { passive: false });
-    canvas.addEventListener("touchend", onTE);
-
-    // ── Render loop ────────────────────────────────────────────────────────
+    let t = 0;
     let rafId = 0;
-    let lastTime = performance.now();
     let destroyed = false;
 
-    const drawFrame = (now: number) => {
+    function renderGL() {
       if (destroyed) return;
+      t += 0.004;
+      box.rotation.x = t * 0.4;
+      box.rotation.y = t;
+      renderer.render(scene, camera);
+      rafId = requestAnimationFrame(renderGL);
+    }
+    rafId = requestAnimationFrame(renderGL);
 
-      const delta = Math.min(now - lastTime, 32); // cap at ~30 fps min
-      lastTime = now;
-      Matter.Engine.update(engine, delta);
-
-      ctx.clearRect(0, 0, W, H);
-
-      ctx.font = fontStr;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-
-      for (const { body, ch, bW, bH } of letterBodies) {
-        const { x, y } = body.position;
-        const angle = body.angle;
-        const dragging = body === activeBody;
-
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(angle);
-
-        // Box fill + border
-        ctx.fillStyle = dragging ? C_BOX_ACTIVE : C_BOX;
-        ctx.strokeStyle = dragging ? C_BORDER_ACTIVE : C_BORDER;
-        ctx.lineWidth = 1;
-        ctx.fillRect(-bW / 2, -bH / 2, bW, bH);
-        ctx.strokeRect(-bW / 2, -bH / 2, bW, bH);
-
-        // Letter — offset up slightly so cap-height visually centres in box
-        ctx.fillStyle = dragging ? C_ACCENT : C_FG;
-        ctx.fillText(ch, 0, -bH * 0.04);
-
-        ctx.restore();
-      }
-
-      rafId = requestAnimationFrame(drawFrame);
+    const onResize = () => {
+      const nW = wrap.offsetWidth;
+      const nH = wrap.offsetHeight;
+      renderer.setSize(nW, nH);
+      camera.aspect = nW / nH;
+      camera.updateProjectionMatrix();
     };
+    window.addEventListener("resize", onResize);
 
-    // Wait for fonts to load before starting (avoids wrong letter widths)
-    document.fonts.ready.then(() => {
-      if (!destroyed) {
-        lastTime = performance.now();
-        rafId = requestAnimationFrame(drawFrame);
-      }
-    });
-
-    // ── Cleanup ────────────────────────────────────────────────────────────
     return () => {
       destroyed = true;
       cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", onResize);
+      renderer.dispose();
+      gridGeo.dispose();
+      gridMat.dispose();
+      boxGeo.dispose();
+      boxEdge.dispose();
+      boxMat.dispose();
+    };
+  }, [isDesktop]);
 
-      canvas.removeEventListener("mousedown", onMD);
-      window.removeEventListener("mousemove", onMM);
-      window.removeEventListener("mouseup", onMU);
-      canvas.removeEventListener("touchstart", onTS);
-      canvas.removeEventListener("touchmove", onTM);
-      canvas.removeEventListener("touchend", onTE);
+  // ── Matter.js physics ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!isDesktop) return;
+    const wrap = containerRef.current;
+    const canvas = phyCanvasRef.current;
+    if (!wrap || !canvas) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Sizing (match HTML)
+    const W = wrap.offsetWidth;
+    const H = wrap.offsetHeight;
+    canvas.width = W;
+    canvas.height = H;
+
+    // Font size exactly like HTML: min(floor(W / 5.5), 110)
+    const FS = Math.min(Math.floor(W / 5.5), 110);
+    const font = `800 ${FS}px 'JetBrains Mono', monospace`;
+
+    const NAME = text.toUpperCase();
+
+    // Engine
+    const engine = Matter.Engine.create({ gravity: { y: 1.3 } });
+    const world = engine.world;
+
+    // Measure widths
+    ctx.font = font;
+    const widths = [...NAME].map((ch) => ctx.measureText(ch).width);
+    const totalW = widths.reduce((a, b) => a + b, 0);
+    let xOff = (W - totalW) / 2;
+
+    // Boundaries (match HTML)
+    const floor = Matter.Bodies.rectangle(W / 2, H + 30, W * 3, 60, {
+      isStatic: true,
+      label: "wall",
+    });
+    const wallL = Matter.Bodies.rectangle(-30, H / 2, 60, H * 3, {
+      isStatic: true,
+      label: "wall",
+    });
+    const wallR = Matter.Bodies.rectangle(W + 30, H / 2, 60, H * 3, {
+      isStatic: true,
+      label: "wall",
+    });
+    Matter.World.add(world, [floor, wallL, wallR]);
+
+    // Letter bodies — spawn ABOVE canvas (match HTML: by = -FS*1.8 - i*28)
+    const bodies: Matter.Body[] = [];
+    [...NAME].forEach((ch, i) => {
+      const cw = widths[i];
+      const bx = xOff + cw / 2;
+      const by = -FS * 1.8 - i * 28; // above canvas — falls into view
+      xOff += cw;
+
+      if (ch === " ") return; // skip space — but x offset already advanced
+
+      const b = Matter.Bodies.rectangle(bx, by, cw * 0.78, FS * 0.82, {
+        restitution: 0.25,
+        friction: 0.6,
+        frictionAir: 0.018,
+        label: ch,
+        angle: (Math.random() - 0.5) * 0.4,
+      });
+      bodies.push(b);
+      Matter.World.add(world, b);
+    });
+
+    // MouseConstraint for drag (stiffness 0.25 — match HTML)
+    const mouse = Matter.Mouse.create(canvas);
+    const mc = Matter.MouseConstraint.create(engine, {
+      mouse,
+      constraint: { stiffness: 0.25, render: { visible: false } },
+    });
+    Matter.World.add(world, mc);
+
+    // Remove wheel listener to prevent scroll hijacking
+    (mouse.element as HTMLElement).removeEventListener(
+      "mousewheel",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mouse as any).mousewheel
+    );
+    (mouse.element as HTMLElement).removeEventListener(
+      "DOMMouseScroll",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mouse as any).mousewheel
+    );
+
+    // Cursor repulsion tracking
+    let localMX = -9999;
+    let localMY = -9999;
+    const onMM = (e: MouseEvent) => {
+      const r = canvas.getBoundingClientRect();
+      localMX = e.clientX - r.left;
+      localMY = e.clientY - r.top;
+    };
+    const onML = () => {
+      localMX = -9999;
+      localMY = -9999;
+    };
+    canvas.addEventListener("mousemove", onMM);
+    canvas.addEventListener("mouseleave", onML);
+
+    // Click-to-scatter (match HTML)
+    const onCK = (e: MouseEvent) => {
+      const r = canvas.getBoundingClientRect();
+      const ex = e.clientX - r.left;
+      const ey = e.clientY - r.top;
+      bodies.forEach((b) => {
+        const dx = b.position.x - ex;
+        const dy = b.position.y - ey;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const f = 0.008;
+        Matter.Body.applyForce(b, b.position, {
+          x: (dx / dist) * f,
+          y: (dy / dist) * f - 0.002,
+        });
+      });
+    };
+    canvas.addEventListener("click", onCK);
+
+    // Runner
+    const runner = Matter.Runner.create();
+    Matter.Runner.run(runner, engine);
+
+    // Draw loop
+    let rafId = 0;
+    let destroyed = false;
+
+    const draw = () => {
+      if (destroyed) return;
+
+      ctx.clearRect(0, 0, W, H);
+
+      // Apply repulsion each frame (match HTML)
+      bodies.forEach((b) => {
+        const dx = b.position.x - localMX;
+        const dy = b.position.y - localMY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 130 && dist > 1) {
+          const f = ((130 - dist) / 130) * 0.0028;
+          Matter.Body.applyForce(b, b.position, {
+            x: (dx / dist) * f,
+            y: (dy / dist) * f,
+          });
+        }
+      });
+
+      // Draw each letter — glow + text + accent stroke (match HTML)
+      ctx.font = font;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      bodies.forEach((b) => {
+        ctx.save();
+        ctx.translate(b.position.x, b.position.y);
+        ctx.rotate(b.angle);
+
+        // Glow shadow
+        ctx.shadowColor = GLOW_COLOR;
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = C_FG;
+        ctx.fillText(b.label, 0, 0);
+
+        // Accent stroke
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = STROKE_COLOR;
+        ctx.lineWidth = 1;
+        ctx.strokeText(b.label, 0, 0);
+
+        ctx.restore();
+      });
+
+      rafId = requestAnimationFrame(draw);
+    };
+
+    // Wait for font before first frame
+    document.fonts.ready.then(() => {
+      if (!destroyed) rafId = requestAnimationFrame(draw);
+    });
+
+    // Resize
+    const onResize = () => {
+      const nW = wrap.offsetWidth;
+      const nH = wrap.offsetHeight;
+      canvas.width = nW;
+      canvas.height = nH;
+      Matter.Body.setPosition(floor, { x: nW / 2, y: nH + 30 });
+      Matter.Body.setPosition(wallR, { x: nW + 30, y: nH / 2 });
+    };
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      destroyed = true;
+      cancelAnimationFrame(rafId);
+      canvas.removeEventListener("mousemove", onMM);
+      canvas.removeEventListener("mouseleave", onML);
+      canvas.removeEventListener("click", onCK);
+      window.removeEventListener("resize", onResize);
+      Matter.Runner.stop(runner);
       Matter.Engine.clear(engine);
       Matter.Composite.clear(world, false);
     };
   }, [isDesktop, text]);
 
-  // ── Mobile / static fallback ───────────────────────────────────────────
+  // ── Mobile fallback ───────────────────────────────────────────────────────
   if (!isDesktop) {
     return (
       <div className={styles.staticTitle}>
-        <div>
-          <span className="slabel">001 / INDEX</span>
-          <div>{text.toUpperCase()}</div>
-        </div>
+        <span className="slabel">001 / INDEX</span>
+        <div>{text.toUpperCase()}</div>
       </div>
     );
   }
 
-  // ── Desktop physics stage ──────────────────────────────────────────────
+  // ── Desktop physics stage ─────────────────────────────────────────────────
   return (
-    <div ref={containerRef} className={styles.stage} style={{ height: "52vh" }}>
-      <canvas ref={canvasRef} className={styles.canvas} />
+    <div ref={containerRef} className={styles.stage}>
+      {/* Three.js blueprint grid + rotating box */}
+      <canvas ref={glCanvasRef} className={styles.glCanvas} />
+      {/* Matter.js physics letters */}
+      <canvas ref={phyCanvasRef} className={styles.phyCanvas} />
       <span className={styles.hint}>DRAG / THROW / SCATTER ↑</span>
     </div>
   );

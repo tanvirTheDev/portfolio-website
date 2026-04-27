@@ -4,7 +4,9 @@
 .stage {
   position: relative;
   width: 100%;
-  height: 65vh; /* enough room for full top→bottom letter travel */
+  /* clamp: min 340px on tiny screens, 52vh on mid, 560px max on 4K
+     Letters settle at floor (H-20) so bottom ~FS/2 px of travel is always visible */
+  height: clamp(340px, 52vh, 560px);
   overflow: hidden;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
@@ -81,7 +83,7 @@
   flex-direction: column;
   justify-content: flex-end;
   padding: 40px 48px 32px;
-  min-height: 42vh;
+  min-height: clamp(240px, 40vh, 400px);
   border-bottom: 1px solid var(--border);
   font-size: clamp(52px, 10vw, 128px);
   font-weight: 800;

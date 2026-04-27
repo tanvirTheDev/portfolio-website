@@ -12,7 +12,7 @@ const KineticTitle = dynamic(() => import("./KineticTitle"), {
   loading: () => (
     <div
       style={{
-        height: "65vh",
+        height: "clamp(340px, 52vh, 560px)",
         borderBottom: "1px solid var(--border)",
         flexShrink: 0,
       }}

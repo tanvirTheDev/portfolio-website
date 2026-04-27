@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getSiteSettings, getAllProjects } from "@/lib/sanity/queries";
 import BuildStamp from "@/components/ui/BuildStamp";
+import KineticTitleLoader from "@/components/physics/KineticTitleLoader";
 
 export const metadata: Metadata = { title: "Index" };
 
@@ -21,28 +22,8 @@ export default async function HomePage() {
 
   return (
     <div>
-      {/* ── PHYSICS STAGE (canvas injected in Phase 5 / KineticTitle) ── */}
-      <div
-        className="phys-stage"
-        style={{ height: "52vh", display: "flex", alignItems: "flex-end", padding: "32px 48px" }}
-        id="stage-wrap"
-      >
-        <div>
-          <span className="slabel">001 / INDEX</span>
-          <div
-            style={{
-              fontSize: "clamp(52px, 10vw, 128px)",
-              fontWeight: 800,
-              textTransform: "uppercase",
-              letterSpacing: "-0.02em",
-              lineHeight: 0.9,
-            }}
-          >
-            {settings?.name ?? "PORTFOLIO"}
-          </div>
-        </div>
-        <div className="phys-hint">DRAG / THROW / SCATTER ↑</div>
-      </div>
+      {/* ── PHYSICS STAGE ── */}
+      <KineticTitleLoader text={settings?.name ?? "PORTFOLIO"} />
 
       {/* ── DIRECTORY LISTING ── */}
       <div className="manifest-hdr" data-reveal="">

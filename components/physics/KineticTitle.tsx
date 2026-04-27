@@ -27,9 +27,11 @@ const STROKE_COLOR = "rgba(232,255,0,.35)";
 
 interface Props {
   text: string;
+  /** Small label shown bottom-left, e.g. "002 / WORK" */
+  label?: string;
 }
 
-export default function KineticTitle({ text }: Props) {
+export default function KineticTitle({ text, label }: Props) {
   const [isDesktop, setIsDesktop] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.innerWidth >= DESKTOP_PX;
@@ -165,8 +167,9 @@ export default function KineticTitle({ text }: Props) {
     const totalW = widths.reduce((a, b) => a + b, 0);
     let xOff = (W - totalW) / 2;
 
-    // Boundaries (match HTML)
-    const floor = Matter.Bodies.rectangle(W / 2, H + 30, W * 3, 60, {
+    // Floor raised 20px so letters settle fully inside visible canvas
+    const FLOOR_Y = H - 20;
+    const floor = Matter.Bodies.rectangle(W / 2, FLOOR_Y, W * 3, 60, {
       isStatic: true,
       label: "wall",
     });
@@ -320,7 +323,7 @@ export default function KineticTitle({ text }: Props) {
       const nH = wrap.offsetHeight;
       canvas.width = nW;
       canvas.height = nH;
-      Matter.Body.setPosition(floor, { x: nW / 2, y: nH + 30 });
+      Matter.Body.setPosition(floor, { x: nW / 2, y: nH - 20 });
       Matter.Body.setPosition(wallR, { x: nW + 30, y: nH / 2 });
     };
     window.addEventListener("resize", onResize);
@@ -342,7 +345,7 @@ export default function KineticTitle({ text }: Props) {
   if (!isDesktop) {
     return (
       <div className={styles.staticTitle}>
-        <span className="slabel">001 / INDEX</span>
+        {label && <span className="slabel">{label}</span>}
         <div>{text.toUpperCase()}</div>
       </div>
     );
@@ -355,6 +358,8 @@ export default function KineticTitle({ text }: Props) {
       <canvas ref={glCanvasRef} className={styles.glCanvas} />
       {/* Matter.js physics letters */}
       <canvas ref={phyCanvasRef} className={styles.phyCanvas} />
+      {/* Section label — top left */}
+      {label && <span className={styles.sectionLabel}>{label}</span>}
       <span className={styles.hint}>DRAG / THROW / SCATTER ↑</span>
     </div>
   );

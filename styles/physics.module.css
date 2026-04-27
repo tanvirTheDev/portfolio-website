@@ -4,7 +4,7 @@
 .stage {
   position: relative;
   width: 100%;
-  height: 58vh; /* match HTML: height: 58vh */
+  height: 65vh; /* enough room for full top→bottom letter travel */
   overflow: hidden;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
@@ -30,6 +30,20 @@
   z-index: 1;
   width: 100% !important;
   height: 100% !important;
+}
+
+/* Section label — top left corner */
+.sectionLabel {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  z-index: 2;
+  font-size: 8px;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.8;
+  pointer-events: none;
 }
 
 /* "DRAG / THROW / SCATTER ↑" label — bottom right */

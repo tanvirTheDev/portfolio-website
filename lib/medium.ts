@@ -67,15 +67,32 @@ export async function getMediumPosts(username: string): Promise<MediumPost[]> {
   "use cache";
   cacheLife("hours");
 
+  function extractUsername(input: string): string {
+    if (!input) return "";
+
+    // If full Medium URL
+    if (input.includes("medium.com")) {
+      const match = input.match(/@([^/?]+)/);
+      return match ? match[1] : "";
+    }
+
+    // If someone writes @username
+    return input.replace("@", "").trim();
+  }
+
   if (!username) return FALLBACK_POSTS;
 
   try {
-    const res = await fetch(`https://medium.com/feed/@${username}`, {
+    const cleanUsername = extractUsername(username);
+
+    const res = await fetch(`https://medium.com/feed/@${cleanUsername}`, {
       headers: { "User-Agent": "portfolio-rss-reader/1.0" },
     });
+
     if (!res.ok) return FALLBACK_POSTS;
 
     const xml = await res.text();
+
     const parser = new XMLParser({ ignoreAttributes: false, parseAttributeValue: true });
     const feed = parser.parse(xml);
     const items: unknown[] = feed?.rss?.channel?.item ?? [];

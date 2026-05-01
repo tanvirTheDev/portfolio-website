@@ -20,10 +20,25 @@ export default async function HomePage() {
     getAllProjects().catch(() => []),
   ]);
 
+  const availability = settings?.availability;
+  const isAvailable = availability?.available ?? false;
+  const availLabel =
+    availability?.label?.trim() || (isAvailable ? "AVAILABLE FOR WORK" : "CURRENTLY ENGAGED");
+
   return (
     <div>
       {/* ── PHYSICS STAGE ── */}
       <KineticTitleLoader text={settings?.name ?? "PORTFOLIO"} />
+
+      {/* ── AVAILABILITY BADGE ── */}
+      {availability && (
+        <div className="avail-wrap" data-reveal="">
+          <span className="avail-badge" data-available={isAvailable ? "true" : "false"}>
+            <span className="avail-dot" aria-hidden />
+            <span>STATUS · {availLabel}</span>
+          </span>
+        </div>
+      )}
 
       {/* ── DIRECTORY LISTING ── */}
       <div className="manifest-hdr" data-reveal="">

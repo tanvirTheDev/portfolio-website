@@ -335,6 +335,48 @@ svg {
 }
 
 /* ── HOME PAGE ── */
+.avail-wrap {
+  padding: 28px 48px 0;
+}
+.avail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+.avail-badge[data-available="true"] {
+  border-color: rgba(74, 222, 128, 0.4);
+}
+.avail-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.7);
+  animation: avail-pulse 1.8s ease-in-out infinite;
+}
+.avail-badge[data-available="false"] .avail-dot {
+  background: #6b7280;
+  box-shadow: none;
+  animation: none;
+}
+@keyframes avail-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+}
 .manifest-hdr {
   font-size: 10px;
   letter-spacing: 0.08em;

@@ -25,6 +25,29 @@ export const siteSettings = defineType({
       description: "Shown in the site header and meta description.",
     }),
     defineField({
+      name: "availability",
+      title: "Availability",
+      type: "object",
+      group: "identity",
+      description: "Shown as a pulsing badge on the homepage.",
+      fields: [
+        defineField({
+          name: "available",
+          title: "Available for Work",
+          type: "boolean",
+          initialValue: true,
+        }),
+        defineField({
+          name: "label",
+          title: "Custom Label",
+          type: "string",
+          description:
+            "Optional override. Defaults to 'AVAILABLE FOR WORK' or 'CURRENTLY ENGAGED'.",
+        }),
+      ],
+      options: { columns: 1 },
+    }),
+    defineField({
       name: "email",
       title: "Contact Email",
       type: "string",

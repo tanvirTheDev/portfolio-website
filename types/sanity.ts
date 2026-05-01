@@ -66,12 +66,18 @@ export type Certificate = {
 
 // ── Site Settings ─────────────────────────────────────────────────────────────
 
+export type Availability = {
+  available?: boolean;
+  label?: string;
+};
+
 export type SiteSettings = {
   _id: string;
   _type: "siteSettings";
   name: string;
   tagline?: string;
   email?: string;
+  availability?: Availability;
   githubUrl?: string;
   linkedinUrl?: string;
   mediumUsername?: string;

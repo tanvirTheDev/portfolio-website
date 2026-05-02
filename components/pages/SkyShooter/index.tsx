@@ -43,6 +43,11 @@ export default function SkyShooter() {
   const [lbLoading, setLbLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [myRank, setMyRank] = useState<number | null>(null);
+  const [bestScore, setBestScore] = useState<number>(() => {
+    const stored = parseInt(localStorage.getItem("sky_best") ?? "0", 10);
+    return isNaN(stored) ? 0 : stored;
+  });
+  const [isNewBest, setIsNewBest] = useState(false);
 
   // ── Boot Phaser once ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -115,9 +120,21 @@ export default function SkyShooter() {
       setPhase("stage_complete");
     };
 
+    const checkAndSaveBest = (score: number) => {
+      const prev = parseInt(localStorage.getItem("sky_best") ?? "0", 10) || 0;
+      if (score > prev) {
+        localStorage.setItem("sky_best", String(score));
+        setBestScore(score);
+        setIsNewBest(true);
+      } else {
+        setIsNewBest(false);
+      }
+    };
+
     const onGameOver = async (p: GameOverPayload) => {
       setFinalScore(p.score);
       setFinalStage(p.stage);
+      checkAndSaveBest(p.score);
       setPhase("game_over");
       await saveAndFetchLeaderboard(p.score, p.stage);
     };
@@ -125,6 +142,7 @@ export default function SkyShooter() {
     const onGameWin = async (p: GameWinPayload) => {
       setFinalScore(p.score);
       setFinalStage(3);
+      checkAndSaveBest(p.score);
       setPhase("victory");
       await saveAndFetchLeaderboard(p.score, 3);
     };
@@ -206,6 +224,11 @@ export default function SkyShooter() {
               ARROWS / WASD — MOVE &nbsp;·&nbsp; SPACE — FIRE &nbsp;·&nbsp; X — BOMB
             </p>
             <p className="sky-hint sky-hint--dim">3 STAGES · UPGRADES BETWEEN STAGES</p>
+            {bestScore > 0 && (
+              <p className="sky-hint sky-hint--best">
+                PERSONAL BEST &nbsp;·&nbsp; {fmt7(bestScore)}
+              </p>
+            )}
             <div className="sky-sep" />
             <button className="sky-btn sky-btn--accent" onClick={handleStart}>
               [ START MISSION ]
@@ -222,6 +245,7 @@ export default function SkyShooter() {
             <p className="sky-sub">— ALL 3 STAGES CLEARED —</p>
             <div className="sky-sep" />
             <p className="sky-score-big">{fmt7(finalScore)}</p>
+            {isNewBest && <p className="sky-new-best">★ NEW PERSONAL BEST ★</p>}
             <p className="sky-sub">FINAL SCORE</p>
             {myRank !== null && myRank <= 10 && (
               <p className="sky-rank">🏆 RANK #{myRank} ON LEADERBOARD</p>
@@ -290,6 +314,7 @@ export default function SkyShooter() {
             <p className="sky-title sky-title--danger">MISSION FAILED</p>
             <div className="sky-sep" />
             <p className="sky-score-big">{fmt7(finalScore)}</p>
+            {isNewBest && <p className="sky-new-best">★ NEW PERSONAL BEST ★</p>}
             <p className="sky-sub">FINAL SCORE &nbsp;·&nbsp; STAGE {finalStage}</p>
             {myRank !== null && myRank <= 10 && (
               <p className="sky-rank">🏆 RANK #{myRank} ON LEADERBOARD</p>

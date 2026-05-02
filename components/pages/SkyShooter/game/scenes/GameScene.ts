@@ -32,6 +32,7 @@ export class GameScene extends Phaser.Scene {
   enemies!: Phaser.Physics.Arcade.Group;
   bossGroup!: Phaser.Physics.Arcade.Group;
   pickups!: Phaser.Physics.Arcade.Group;
+  powerupGroup!: Phaser.Physics.Arcade.Group;
   boss: Boss | null = null;
 
   // ── Background layers ─────────────────────────────────────────────────────────
@@ -48,6 +49,8 @@ export class GameScene extends Phaser.Scene {
   bombsTxt!: Phaser.GameObjects.Text;
   waveBanner!: Phaser.GameObjects.Text;
   muteBtn!: Phaser.GameObjects.Text;
+  comboTxt!: Phaser.GameObjects.Text;
+  comboTxtTimer?: Phaser.Time.TimerEvent;
 
   // ── Particles ─────────────────────────────────────────────────────────────────
   explosionEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
@@ -158,6 +161,7 @@ export class GameScene extends Phaser.Scene {
     this.enemies = this.physics.add.group();
     this.bossGroup = this.physics.add.group();
     this.pickups = this.physics.add.group({ maxSize: 50 });
+    this.powerupGroup = this.physics.add.group({ maxSize: 12 });
   }
 
   // ── Player ────────────────────────────────────────────────────────────────────
@@ -240,6 +244,15 @@ export class GameScene extends Phaser.Scene {
           .setText(soundManager.muted ? "✕" : "♪")
           .setColor(soundManager.muted ? "#ff4444" : "#f2f0e9");
       });
+
+    // Combo streak display — bottom-centre, revealed when combo fires
+    this.comboTxt = this.add
+      .text(W / 2, H - 28, "", mono(13, "#ff8800"))
+      .setDepth(22)
+      .setScrollFactor(0)
+      .setOrigin(0.5)
+      .setAlpha(0)
+      .setVisible(false);
   }
 
   // ── Particles ─────────────────────────────────────────────────────────────────
@@ -353,6 +366,15 @@ export class GameScene extends Phaser.Scene {
       this.starsCollected += 1;
       this.broadcastScore();
     });
+
+    // Power-up capsules → player
+    this.physics.add.overlap(this.powerupGroup, this.player, (pu) => {
+      const p = pu as Phaser.Physics.Arcade.Sprite;
+      if (!p.active) return;
+      const key = p.texture.key;
+      p.setActive(false).setVisible(false);
+      this.collectPowerup(key);
+    });
   }
 
   // ── Collision callbacks ───────────────────────────────────────────────────────
@@ -376,6 +398,7 @@ export class GameScene extends Phaser.Scene {
         soundManager.combo(this.comboCount);
       }
       this.showFloatingScore(enemy.x, enemy.y, pts, this.comboCount);
+      this.updateComboHUD();
       // ─────────────────────────────────────────────────────────────
 
       this.starsCollected += enemy.starDrop;
@@ -383,6 +406,7 @@ export class GameScene extends Phaser.Scene {
       this.explode(enemy.x, enemy.y, 20);
       soundManager.enemyDie();
       this.spawnPickup(enemy.x, enemy.y, enemy.starDrop);
+      this.tryDropPowerup(enemy.x, enemy.y);
       enemy.setActive(false).setVisible(false);
       this.broadcastScore();
     }
@@ -626,11 +650,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   private cleanPickups(H: number) {
-    (this.pickups.getChildren() as Phaser.Physics.Arcade.Sprite[]).forEach((p) => {
-      if (p.active && p.y > H + 40) {
-        p.setActive(false).setVisible(false);
-      }
-    });
+    const offscreen = (p: Phaser.Physics.Arcade.Sprite) => {
+      if (p.active && p.y > H + 40) p.setActive(false).setVisible(false);
+    };
+    (this.pickups.getChildren() as Phaser.Physics.Arcade.Sprite[]).forEach(offscreen);
+    (this.powerupGroup.getChildren() as Phaser.Physics.Arcade.Sprite[]).forEach(offscreen);
   }
 
   // ── EventBus ──────────────────────────────────────────────────────────────────
@@ -644,6 +668,8 @@ export class GameScene extends Phaser.Scene {
       this.currentWave = 0;
       this.comboCount = 0;
       this.lastKillTime = 0;
+      this.comboTxtTimer?.remove();
+      this.comboTxt.setVisible(false).setAlpha(0);
       this.active = true;
 
       this.clearAllEnemies();
@@ -664,6 +690,8 @@ export class GameScene extends Phaser.Scene {
       this.starsCollected = 0;
       this.comboCount = 0;
       this.lastKillTime = 0;
+      this.comboTxtTimer?.remove();
+      this.comboTxt.setVisible(false).setAlpha(0);
       this.active = true;
 
       this.clearAllEnemies();
@@ -686,6 +714,10 @@ export class GameScene extends Phaser.Scene {
     this.bossGroup.clear(false, false);
     (this.enemyBullets.getChildren() as Phaser.Physics.Arcade.Sprite[]).forEach((b) => {
       if (b.active) this.killBullet(b);
+    });
+    // Clear in-flight power-up capsules
+    (this.powerupGroup.getChildren() as Phaser.Physics.Arcade.Sprite[]).forEach((p) => {
+      if (p.active) p.setActive(false).setVisible(false);
     });
     this.pendingSpawns = 0;
     this.waveClearFired = false;
@@ -740,6 +772,127 @@ export class GameScene extends Phaser.Scene {
     this.starsTxt?.setX(W - 16);
     this.muteBtn?.setX(W - 16);
     this.waveBanner?.setPosition(W / 2, H / 2 - 40);
+    this.comboTxt?.setPosition(W / 2, H - 28);
+  }
+
+  // ── Power-up drops ────────────────────────────────────────────────────────────
+  private tryDropPowerup(x: number, y: number) {
+    if (Math.random() > 0.12) return; // 12 % drop chance
+
+    // Weighted selection
+    const weights: [string, number][] = [
+      ["pu_gun", 30],
+      ["pu_shield", 30],
+      ["pu_speed", 25],
+      ["pu_bomb", 15],
+    ];
+    let roll = Math.random() * 100;
+    let chosen = "pu_gun";
+    for (const [key, w] of weights) {
+      roll -= w;
+      if (roll <= 0) {
+        chosen = key;
+        break;
+      }
+    }
+
+    const pu = this.powerupGroup.get(x, y, chosen) as Phaser.Physics.Arcade.Sprite | null;
+    if (!pu) return;
+    pu.setActive(true).setVisible(true).setDepth(5).setTexture(chosen);
+    (pu.body as Phaser.Physics.Arcade.Body).setVelocity(
+      Phaser.Math.Between(-40, 40),
+      Phaser.Math.Between(45, 80)
+    );
+  }
+
+  private collectPowerup(type: string) {
+    soundManager.pickupPowerup();
+    this.cameras.main.flash(90, 255, 255, 80);
+    const u = this.player.upgrades;
+
+    switch (type) {
+      case "pu_gun":
+        if (u.gunLevel < 3) {
+          u.gunLevel = (u.gunLevel + 1) as 0 | 1 | 2 | 3;
+          this.showPowerupFlash("GUN UP!", "#e8ff00");
+        } else {
+          this.score += 300;
+          this.showPowerupFlash("+300", "#888");
+        }
+        break;
+      case "pu_shield":
+        this.player.giveShield();
+        this.showPowerupFlash("SHIELD UP!", "#00cfff");
+        break;
+      case "pu_speed":
+        if ((u.speedLevel as number) < 3) {
+          u.speedLevel = ((u.speedLevel as number) + 1) as 1 | 2 | 3;
+          this.showPowerupFlash("SPEED UP!", "#44ff88");
+        } else {
+          this.score += 300;
+          this.showPowerupFlash("+300", "#888");
+        }
+        break;
+      case "pu_bomb":
+        this.player.giveBomb();
+        this.showPowerupFlash("BOMB!", "#ff4444");
+        break;
+    }
+    this.broadcastScore();
+  }
+
+  private showPowerupFlash(text: string, color: string) {
+    const px = this.player.x;
+    const py = this.player.y - 44;
+    const txt = this.add
+      .text(px, py, text, {
+        fontFamily: '"JetBrains Mono", monospace',
+        fontSize: "13px",
+        color,
+        stroke: "#000000",
+        strokeThickness: 3,
+      })
+      .setDepth(28)
+      .setOrigin(0.5);
+
+    this.tweens.add({
+      targets: txt,
+      y: py - 48,
+      alpha: { from: 1, to: 0 },
+      duration: 1100,
+      ease: "Power1",
+      onComplete: () => txt.destroy(),
+    });
+  }
+
+  // ── Combo HUD update ──────────────────────────────────────────────────────────
+  private updateComboHUD() {
+    if (this.comboCount < 2) return;
+
+    const color =
+      this.comboCount >= 5
+        ? "#ff4444"
+        : this.comboCount >= 4
+          ? "#ff8800"
+          : this.comboCount >= 3
+            ? "#ffcc00"
+            : "#ff9900";
+    this.comboTxt
+      .setText(`× ${this.comboCount}  COMBO`)
+      .setColor(color)
+      .setVisible(true)
+      .setAlpha(1);
+
+    // Auto-fade after window expires
+    this.comboTxtTimer?.remove();
+    this.comboTxtTimer = this.time.delayedCall(this.COMBO_WINDOW, () => {
+      this.tweens.add({
+        targets: this.comboTxt,
+        alpha: 0,
+        duration: 380,
+        onComplete: () => this.comboTxt.setVisible(false),
+      });
+    });
   }
 
   // ── Floating score label ──────────────────────────────────────────────────────

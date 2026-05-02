@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import type { Upgrades } from "../EventBus";
+import { soundManager } from "../SoundManager";
 
 const SPEED_MAP: Record<1 | 2 | 3, number> = { 1: 280, 2: 360, 3: 440 };
 const FIRE_RATE_MAP: Record<0 | 1 | 2 | 3, number> = { 0: 260, 1: 220, 2: 180, 3: 140 }; // ms between shots
@@ -88,7 +89,21 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         break;
     }
 
-    this.scene.sound.play("sfx_shoot", { volume: 0.06 });
+    // Procedural sound — varies by gun level
+    switch (gunLvl) {
+      case 1:
+        soundManager.shootDouble();
+        break;
+      case 2:
+        soundManager.shootSpread();
+        break;
+      case 3:
+        soundManager.shootLaser();
+        break;
+      default:
+        soundManager.shoot();
+        break;
+    }
   }
 
   private spawnBullet(

@@ -88,7 +88,10 @@ export default function BootSequence({
   const done = shownCount >= lines.length;
 
   return (
-    <div className={`boot-overlay${exiting ? "boot-exit" : ""}`} aria-hidden="true">
+    <div
+      className={["boot-overlay", exiting ? "boot-exit" : ""].filter(Boolean).join(" ")}
+      aria-hidden="true"
+    >
       <div className="boot-inner">
         {displayed.map((line, i) => (
           <div key={i} className={`boot-line boot-line--${line.color}`}>

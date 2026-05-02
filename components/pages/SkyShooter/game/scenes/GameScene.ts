@@ -5,6 +5,7 @@ import { Boss } from "../entities/Boss";
 import { EventBus, EV, DEFAULT_UPGRADES } from "../EventBus";
 import type { StartPayload, Upgrades } from "../EventBus";
 import { getWave, getWaveCount } from "../StageManager";
+import { soundManager } from "../SoundManager";
 
 const SCROLL_SPEED = 60; // px/s for background parallax
 
@@ -46,6 +47,7 @@ export class GameScene extends Phaser.Scene {
   stageTxt!: Phaser.GameObjects.Text;
   bombsTxt!: Phaser.GameObjects.Text;
   waveBanner!: Phaser.GameObjects.Text;
+  muteBtn!: Phaser.GameObjects.Text;
 
   // ── Particles ─────────────────────────────────────────────────────────────────
   explosionEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
@@ -60,6 +62,14 @@ export class GameScene extends Phaser.Scene {
   active = false;
   pendingSpawns = 0;
   waveClearFired = false;
+
+  // ── Combo system ─────────────────────────────────────────────────────────────
+  comboCount = 0;
+  lastKillTime = 0;
+  readonly COMBO_WINDOW = 1800; // ms to chain kills
+
+  // ── Mobile touch ─────────────────────────────────────────────────────────────
+  touchFiring = false;
 
   constructor() {
     super({ key: "GameScene" });
@@ -213,6 +223,23 @@ export class GameScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setAlpha(0)
       .setVisible(false);
+
+    // Mute toggle
+    this.muteBtn = this.add
+      .text(W - 16, 16, "♪", mono(11, "#f2f0e9"))
+      .setDepth(20)
+      .setScrollFactor(0)
+      .setOrigin(1, 0)
+      .setAlpha(0.55)
+      .setInteractive({ useHandCursor: true })
+      .on("pointerover", () => this.muteBtn.setAlpha(1))
+      .on("pointerout", () => this.muteBtn.setAlpha(0.55))
+      .on("pointerdown", () => {
+        soundManager.toggleMute();
+        this.muteBtn
+          .setText(soundManager.muted ? "✕" : "♪")
+          .setColor(soundManager.muted ? "#ff4444" : "#f2f0e9");
+      });
   }
 
   // ── Particles ─────────────────────────────────────────────────────────────────
@@ -249,13 +276,19 @@ export class GameScene extends Phaser.Scene {
     this.fireKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.bombKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.X);
 
-    // Touch: drag to move, tap to fire
+    // Touch: drag to follow finger (X + Y), auto-fire while held
     this.input.on("pointermove", (ptr: Phaser.Input.Pointer) => {
       if (!this.active || !ptr.isDown) return;
-      this.player.setX(Phaser.Math.Clamp(ptr.x, 24, this.scale.width - 24));
+      const W = this.scale.width;
+      const H = this.scale.height;
+      this.player.setX(Phaser.Math.Clamp(ptr.x, 24, W - 24));
+      this.player.setY(Phaser.Math.Clamp(ptr.y, 50, H - 40));
     });
     this.input.on("pointerdown", () => {
-      if (this.active) this.player.fire(this.playerBullets, this.time.now);
+      if (this.active) this.touchFiring = true;
+    });
+    this.input.on("pointerup", () => {
+      this.touchFiring = false;
     });
   }
 
@@ -276,7 +309,7 @@ export class GameScene extends Phaser.Scene {
 
     this.player.move(dx, dy);
 
-    if (this.fireKey.isDown) this.player.fire(this.playerBullets, time);
+    if (this.fireKey.isDown || this.touchFiring) this.player.fire(this.playerBullets, time);
 
     if (Phaser.Input.Keyboard.JustDown(this.bombKey)) {
       if (this.player.dropBomb(this)) this.doBomb();
@@ -316,6 +349,7 @@ export class GameScene extends Phaser.Scene {
       const p = pk as Phaser.Physics.Arcade.Sprite;
       if (!p.active) return;
       p.setActive(false).setVisible(false);
+      soundManager.pickupStar();
       this.starsCollected += 1;
       this.broadcastScore();
     });
@@ -325,10 +359,29 @@ export class GameScene extends Phaser.Scene {
   private onBulletHitEnemy(bullet: Phaser.Physics.Arcade.Sprite, enemy: Enemy) {
     if (!bullet.active || !enemy.active) return;
     this.killBullet(bullet);
+    soundManager.enemyHit();
     if (enemy.takeDamage(1)) {
+      // ── Combo chain ──────────────────────────────────────────────
+      const now = this.time.now;
+      if (now - this.lastKillTime < this.COMBO_WINDOW) {
+        this.comboCount++;
+      } else {
+        this.comboCount = 1;
+      }
+      this.lastKillTime = now;
+
+      let pts = enemy.points;
+      if (this.comboCount >= 2) {
+        pts = Math.floor(pts * this.comboCount);
+        soundManager.combo(this.comboCount);
+      }
+      this.showFloatingScore(enemy.x, enemy.y, pts, this.comboCount);
+      // ─────────────────────────────────────────────────────────────
+
       this.starsCollected += enemy.starDrop;
-      this.score += enemy.points;
+      this.score += pts;
       this.explode(enemy.x, enemy.y, 20);
+      soundManager.enemyDie();
       this.spawnPickup(enemy.x, enemy.y, enemy.starDrop);
       enemy.setActive(false).setVisible(false);
       this.broadcastScore();
@@ -338,6 +391,7 @@ export class GameScene extends Phaser.Scene {
   private onBulletHitBoss(bullet: Phaser.Physics.Arcade.Sprite, bossObj: Boss) {
     if (!bullet.active || !bossObj.active || !this.boss) return;
     this.killBullet(bullet);
+    soundManager.enemyHit();
     if (this.boss.takeDamage(1)) {
       this.onBossKilled();
     }
@@ -378,6 +432,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     if (waveData.kind === "boss") {
+      soundManager.bossWarning();
       this.showBanner("⚠ BOSS INCOMING ⚠", "#ff4444");
       this.time.delayedCall(1200, () => this.spawnBoss());
     } else {
@@ -452,6 +507,7 @@ export class GameScene extends Phaser.Scene {
       if (b.active) this.killBullet(b);
     });
 
+    soundManager.bomb();
     this.cameras.main.flash(220, 255, 255, 120);
     this.broadcastScore();
   }
@@ -459,6 +515,8 @@ export class GameScene extends Phaser.Scene {
   // ── Player hit ────────────────────────────────────────────────────────────────
   onPlayerHit() {
     if (!this.active) return;
+    soundManager.playerHit();
+    this.comboCount = 0; // break combo on damage
     const result = this.player.hit();
     if (result === "dead") {
       this.triggerGameOver();
@@ -495,6 +553,7 @@ export class GameScene extends Phaser.Scene {
     const bossScore = [0, 2000, 3500, 5500][this.currentStage] ?? 2000;
     this.score += bossScore;
     this.explode(this.boss!.x, this.boss!.y, 45, 0xff4444);
+    soundManager.bigExplosion();
     this.cameras.main.shake(700, 0.022);
     this.cameras.main.flash(180, 255, 200, 60);
     this.boss!.destroy();
@@ -509,8 +568,10 @@ export class GameScene extends Phaser.Scene {
   private onStageComplete() {
     this.active = false;
     if (this.currentStage >= 3) {
+      soundManager.victory();
       EventBus.emit(EV.GAME_WIN, { score: this.score });
     } else {
+      soundManager.stageComplete();
       EventBus.emit(EV.STAGE_COMPLETE, {
         stage: this.currentStage,
         stars: this.starsCollected,
@@ -521,6 +582,7 @@ export class GameScene extends Phaser.Scene {
 
   triggerGameOver() {
     this.active = false;
+    soundManager.gameOver();
     this.player.setVisible(false);
     this.time.delayedCall(800, () => {
       EventBus.emit(EV.GAME_OVER, {
@@ -580,6 +642,8 @@ export class GameScene extends Phaser.Scene {
       this.starsCollected = 0;
       this.currentStage = 1;
       this.currentWave = 0;
+      this.comboCount = 0;
+      this.lastKillTime = 0;
       this.active = true;
 
       this.clearAllEnemies();
@@ -598,6 +662,8 @@ export class GameScene extends Phaser.Scene {
       this.currentStage = payload.stage;
       this.currentWave = 0;
       this.starsCollected = 0;
+      this.comboCount = 0;
+      this.lastKillTime = 0;
       this.active = true;
 
       this.clearAllEnemies();
@@ -672,7 +738,35 @@ export class GameScene extends Phaser.Scene {
     this.scoreTxt?.setX(W / 2);
     this.livesTxt?.setX(W - 16);
     this.starsTxt?.setX(W - 16);
+    this.muteBtn?.setX(W - 16);
     this.waveBanner?.setPosition(W / 2, H / 2 - 40);
+  }
+
+  // ── Floating score label ──────────────────────────────────────────────────────
+  private showFloatingScore(x: number, y: number, pts: number, combo = 0) {
+    const label = combo >= 2 ? `×${combo}  +${pts}` : `+${pts}`;
+    const color =
+      combo >= 4 ? "#ff4444" : combo >= 3 ? "#ff8800" : combo >= 2 ? "#e8ff00" : "#f2f0e9";
+    const size = combo >= 2 ? 14 : 11;
+    const txt = this.add
+      .text(x, y, label, {
+        fontFamily: '"JetBrains Mono", monospace',
+        fontSize: `${size}px`,
+        color,
+        stroke: "#000000",
+        strokeThickness: 2,
+      })
+      .setDepth(25)
+      .setOrigin(0.5);
+
+    this.tweens.add({
+      targets: txt,
+      y: y - 52,
+      alpha: { from: 1, to: 0 },
+      duration: 920,
+      ease: "Power1",
+      onComplete: () => txt.destroy(),
+    });
   }
 
   // ── Cleanup ───────────────────────────────────────────────────────────────────

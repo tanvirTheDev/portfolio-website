@@ -10,6 +10,7 @@ import {
   type ScorePayload,
   type GameOverPayload,
   type StagePayload,
+  type GameWinPayload,
 } from "./game/EventBus";
 import type { ScoreEntry } from "@/types/sanity";
 
@@ -24,11 +25,16 @@ const fmt7 = (n: number) => String(Math.floor(n)).padStart(7, "0");
 export default function SkyShooter() {
   const gameRef = useRef<Phaser.Game | null>(null);
   const mountedRef = useRef(true);
+  const stageNumRef = useRef(1); // kept in sync so handleUpgradeDone always sees current value
 
   const [phase, setPhase] = useState<Phase>("name_input");
   const [playerName, setPlayerName] = useState("");
   const [nameError, setNameError] = useState("");
   const [stageNum, setStageNum] = useState(1);
+  // Keep ref in sync so callbacks can read current value without stale closure
+  useEffect(() => {
+    stageNumRef.current = stageNum;
+  }, [stageNum]);
   const [upgrades, setUpgrades] = useState<Upgrades>({ ...DEFAULT_UPGRADES });
   const [pendingStars, setPendingStars] = useState(0);
   const [finalScore, setFinalScore] = useState(0);
@@ -116,14 +122,23 @@ export default function SkyShooter() {
       await saveAndFetchLeaderboard(p.score, p.stage);
     };
 
+    const onGameWin = async (p: GameWinPayload) => {
+      setFinalScore(p.score);
+      setFinalStage(3);
+      setPhase("victory");
+      await saveAndFetchLeaderboard(p.score, 3);
+    };
+
     EventBus.on(EV.SCORE_UPDATE, onScore);
     EventBus.on(EV.STAGE_COMPLETE, onStageComplete);
     EventBus.on(EV.GAME_OVER, onGameOver);
+    EventBus.on(EV.GAME_WIN, onGameWin);
 
     return () => {
       EventBus.off(EV.SCORE_UPDATE, onScore);
       EventBus.off(EV.STAGE_COMPLETE, onStageComplete);
       EventBus.off(EV.GAME_OVER, onGameOver);
+      EventBus.off(EV.GAME_WIN, onGameWin);
     };
   }, [saveAndFetchLeaderboard]);
 
@@ -146,10 +161,11 @@ export default function SkyShooter() {
   }, [playerName]);
 
   const handleUpgradeDone = useCallback((newUpgrades: Upgrades) => {
-    setStageNum((prev) => prev + 1);
+    const nextStage = stageNumRef.current + 1;
+    setStageNum(nextStage);
     setUpgrades(newUpgrades);
     setPhase("playing");
-    EventBus.emit(EV.RESUME_STAGE, { upgrades: newUpgrades });
+    EventBus.emit(EV.RESUME_STAGE, { upgrades: newUpgrades, stage: nextStage });
   }, []);
 
   const handlePlayAgain = useCallback(() => {
@@ -194,6 +210,64 @@ export default function SkyShooter() {
             <button className="sky-btn sky-btn--accent" onClick={handleStart}>
               [ START MISSION ]
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Victory ── */}
+      {phase === "victory" && (
+        <div className="sky-overlay">
+          <div className="sky-screen sky-screen--wide">
+            <p className="sky-title sky-title--victory">MISSION COMPLETE</p>
+            <p className="sky-sub">— ALL 3 STAGES CLEARED —</p>
+            <div className="sky-sep" />
+            <p className="sky-score-big">{fmt7(finalScore)}</p>
+            <p className="sky-sub">FINAL SCORE</p>
+            {myRank !== null && myRank <= 10 && (
+              <p className="sky-rank">🏆 RANK #{myRank} ON LEADERBOARD</p>
+            )}
+            <div className="sky-sep" />
+            <div className="sky-lb">
+              <div className="sky-lb-hdr">
+                <span>#</span>
+                <span>CALLSIGN</span>
+                <span>SCORE</span>
+                <span>STG</span>
+              </div>
+              {lbLoading || saving ? (
+                <p className="sky-lb-loading">SYNCING...</p>
+              ) : leaderboard.length === 0 ? (
+                <p className="sky-lb-loading">NO SCORES YET</p>
+              ) : (
+                leaderboard.map((entry, i) => {
+                  const isMe =
+                    entry.playerName === playerName.trim().toUpperCase() &&
+                    entry.score === finalScore;
+                  return (
+                    <div
+                      key={entry._id}
+                      className={["sky-lb-row", isMe ? "sky-lb-row--me" : ""]
+                        .filter(Boolean)
+                        .join(" ")}
+                    >
+                      <span>{String(i + 1).padStart(2, "0")}</span>
+                      <span>{entry.playerName}</span>
+                      <span>{fmt7(entry.score)}</span>
+                      <span>{entry.stageReached}</span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            <div className="sky-sep" />
+            <div className="sky-actions">
+              <button className="sky-btn" onClick={handlePlayAgain}>
+                [ PLAY AGAIN ]
+              </button>
+              <a href="/contact" className="sky-btn sky-btn--accent">
+                [ HIRE ME → ]
+              </a>
+            </div>
           </div>
         </div>
       )}

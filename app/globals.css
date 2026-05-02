@@ -1631,6 +1631,9 @@ svg {
 .sky-title--danger {
   color: #ff4444;
 }
+.sky-title--victory {
+  color: #44ff88;
+}
 
 .sky-sub {
   font-size: 10px;

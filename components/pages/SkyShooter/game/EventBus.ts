@@ -28,6 +28,7 @@ export const EV = {
 export type ScorePayload = { score: number; lives: number; stars: number; wave: number };
 export type StagePayload = { stage: number; stars: number; totalScore: number };
 export type GameOverPayload = { score: number; stage: number };
+export type GameWinPayload = { score: number };
 export type StartPayload = { playerName: string; upgrades: Upgrades };
 
 export type Upgrades = {

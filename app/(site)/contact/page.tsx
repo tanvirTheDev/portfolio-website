@@ -16,15 +16,20 @@ function getYouTubeId(url: string): string | null {
   return null;
 }
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: "Contact — Tanvir Ahmed",
+  title: "Contact",
   description:
     "Get in touch with Tanvir Ahmed for freelance work, full-time roles, or project collaborations.",
+  keywords: ["contact", "hire", "freelance", "full-stack developer", "collaboration"],
+  alternates: { canonical: `${SITE_URL}/contact` },
   openGraph: {
     title: "Contact — Tanvir Ahmed",
     description:
       "Get in touch with Tanvir Ahmed for freelance work, full-time roles, or project collaborations.",
     type: "website",
+    url: `${SITE_URL}/contact`,
   },
 };
 

@@ -10,15 +10,19 @@ import { getMediumPosts } from "@/lib/medium";
 import BuildStamp from "@/components/ui/BuildStamp";
 import KineticTitleLoader from "@/components/physics/KineticTitleLoader";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
   title: "Tanvir Ahmed — Full-Stack Developer",
   description:
     "Portfolio of Tanvir Ahmed — full-stack developer specialising in React, Next.js, Node.js, and scalable web products.",
+  alternates: { canonical: SITE_URL },
   openGraph: {
     title: "Tanvir Ahmed — Full-Stack Developer",
     description:
       "Portfolio of Tanvir Ahmed — full-stack developer specialising in React, Next.js, Node.js, and scalable web products.",
     type: "website",
+    url: SITE_URL,
   },
 };
 
@@ -106,8 +110,29 @@ export default async function HomePage() {
     },
   ] as const;
 
+  // JSON-LD Person schema — helps Google understand who this site is about
+  const personSchema = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: settings?.name ?? "Tanvir Ahmed",
+    url: SITE_URL,
+    jobTitle: settings?.tagline ?? "Full-Stack Developer",
+    sameAs: [
+      settings?.githubUrl,
+      settings?.linkedinUrl,
+      settings?.mediumUsername ? `https://medium.com/@${settings.mediumUsername}` : null,
+    ].filter(Boolean),
+    ...(settings?.email && { email: `mailto:${settings.email}` }),
+  };
+
   return (
     <div>
+      {/* ── JSON-LD structured data ── */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
+      />
+
       {/* ── PHYSICS STAGE ── */}
       <KineticTitleLoader text={settings?.name ?? "PORTFOLIO"} />
 

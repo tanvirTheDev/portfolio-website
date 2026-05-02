@@ -3,15 +3,20 @@ import { getAllCertificates } from "@/lib/sanity/queries";
 import CertificatesGrid from "@/components/pages/CertificatesGrid";
 import KineticTitleLoader from "@/components/physics/KineticTitleLoader";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: "Certificates — Tanvir Ahmed",
+  title: "Certificates",
   description:
     "Verified professional certifications in web development, cloud computing, and computer science.",
+  keywords: ["certificates", "certifications", "credentials", "web development", "cloud"],
+  alternates: { canonical: `${SITE_URL}/certificates` },
   openGraph: {
     title: "Certificates — Tanvir Ahmed",
     description:
       "Verified professional certifications in web development, cloud computing, and computer science.",
     type: "website",
+    url: `${SITE_URL}/certificates`,
   },
 };
 

@@ -2,15 +2,20 @@ import type { Metadata } from "next";
 import { getAllExperience } from "@/lib/sanity/queries";
 import KineticTitleLoader from "@/components/physics/KineticTitleLoader";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: "Experience — Tanvir Ahmed",
+  title: "Experience",
   description:
     "Professional experience in full-stack development — roles, responsibilities, and the tech stacks that powered them.",
+  keywords: ["work history", "experience", "developer", "career", "full-stack"],
+  alternates: { canonical: `${SITE_URL}/experience` },
   openGraph: {
     title: "Experience — Tanvir Ahmed",
     description:
       "Professional experience in full-stack development — roles, responsibilities, and the tech stacks that powered them.",
     type: "website",
+    url: `${SITE_URL}/experience`,
   },
 };
 

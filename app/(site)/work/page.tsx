@@ -3,15 +3,20 @@ import { getAllProjects } from "@/lib/sanity/queries";
 import WorkList from "@/components/pages/WorkList";
 import KineticTitleLoader from "@/components/physics/KineticTitleLoader";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: "Work — Tanvir Ahmed",
+  title: "Work",
   description:
     "Full-stack projects — web apps, APIs, and tools built with React, Next.js, Node.js, and more.",
+  keywords: ["projects", "portfolio", "React", "Next.js", "Node.js", "full-stack"],
+  alternates: { canonical: `${SITE_URL}/work` },
   openGraph: {
     title: "Work — Tanvir Ahmed",
     description:
       "Full-stack projects — web apps, APIs, and tools built with React, Next.js, Node.js, and more.",
     type: "website",
+    url: `${SITE_URL}/work`,
   },
 };
 

@@ -4,15 +4,20 @@ import { getMediumPosts } from "@/lib/medium";
 import type { MediumPost } from "@/lib/medium";
 import KineticTitleLoader from "@/components/physics/KineticTitleLoader";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: "Blog — Tanvir Ahmed",
+  title: "Blog",
   description:
     "Technical articles on full-stack development, React, Next.js, Node.js, and system design.",
+  keywords: ["blog", "technical writing", "React", "Next.js", "Node.js", "system design"],
+  alternates: { canonical: `${SITE_URL}/blog` },
   openGraph: {
     title: "Blog — Tanvir Ahmed",
     description:
       "Technical articles on full-stack development, React, Next.js, Node.js, and system design.",
     type: "website",
+    url: `${SITE_URL}/blog`,
   },
 };
 

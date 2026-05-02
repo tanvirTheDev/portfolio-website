@@ -40,9 +40,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const project = await getProjectBySlug(slug);
   if (!project) return { title: "Not Found" };
+  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const url = `${SITE_URL}/work/${slug}`;
   return {
     title: project.title,
     description: project.tagline ?? undefined,
+    alternates: { canonical: url },
+    openGraph: {
+      title: project.title,
+      description: project.tagline ?? undefined,
+      url,
+      type: "article",
+    },
   };
 }
 

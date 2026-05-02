@@ -5,10 +5,11 @@ import DocStrip from "@/components/shell/DocStrip";
 import SideNav from "@/components/shell/SideNav";
 import Cursor from "@/components/shell/Cursor";
 import KeyboardNav from "@/components/shell/KeyboardNav";
+import BootSequence from "@/components/shell/BootSequence";
 import MotionProvider from "@/components/motion/MotionProvider";
 import PageTransition from "@/components/motion/PageTransition";
 import RevealObserver from "@/components/motion/RevealObserver";
-import { getSiteSettings } from "@/lib/sanity/queries";
+import { getSiteSettings, getAllProjects } from "@/lib/sanity/queries";
 
 export const metadata: Metadata = {
   title: { template: "%s — Portfolio", default: "Portfolio" },
@@ -16,8 +17,10 @@ export const metadata: Metadata = {
 };
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  // Fetch once per layout render; cached by Next.js fetch deduplication
-  const settings = await getSiteSettings().catch(() => null);
+  const [settings, projects] = await Promise.all([
+    getSiteSettings().catch(() => null),
+    getAllProjects().catch(() => []),
+  ]);
 
   const name = settings?.name ?? "PORTFOLIO";
   const tagline = settings?.tagline ?? "FULL-STACK DEVELOPER";
@@ -28,6 +31,9 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
+
+      {/* Boot sequence — shows once per browser, before any content */}
+      <BootSequence name={name} projectCount={projects.length} />
 
       {/* Fixed chrome — never transitions */}
       <GridBg />

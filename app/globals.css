@@ -1141,6 +1141,89 @@ svg {
   border-bottom: 1px solid var(--border);
 }
 
+/* ── BOOT SEQUENCE ── */
+.boot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: var(--bg);
+  display: flex;
+  align-items: flex-start;
+  padding: 72px 48px;
+  opacity: 1;
+  transition: opacity 0.48s ease;
+}
+.boot-overlay.boot-exit {
+  opacity: 0;
+  pointer-events: none;
+}
+.boot-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 600px;
+  width: 100%;
+}
+.boot-line {
+  font-size: 13px;
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  letter-spacing: 0.05em;
+  line-height: 1.7;
+  animation: bootIn 0.12s ease-out;
+  white-space: pre;
+}
+.boot-line--default {
+  color: var(--fg);
+  opacity: 0.85;
+}
+.boot-line--green {
+  color: #4ade80;
+}
+.boot-line--accent {
+  color: var(--accent);
+}
+.boot-line--dim {
+  color: var(--fg);
+  opacity: 0.18;
+}
+.boot-cursor {
+  display: inline-block;
+  width: 9px;
+  height: 0.9em;
+  background: var(--accent);
+  margin-left: 3px;
+  vertical-align: middle;
+  animation: bootBlink 0.65s step-end infinite;
+}
+.boot-skip {
+  margin-top: 24px;
+  font-size: 8px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--fg);
+  opacity: 0.28;
+  animation: bootBlink 1.2s ease-in-out infinite;
+}
+@keyframes bootIn {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes bootBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
 /* ── ANIMATIONS ── */
 @keyframes fadeUp {
   from {

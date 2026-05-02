@@ -7,6 +7,8 @@ export type MediumPost = {
   pubDate: string;
   excerpt: string;
   readingTime: string;
+  thumbnail: string | null;
+  tags: string[];
 };
 
 // Shown when the RSS fetch fails
@@ -18,6 +20,8 @@ const FALLBACK_POSTS: MediumPost[] = [
     excerpt:
       "How we achieved sub-10ms p95 latency with fully deterministic physics across 4 000 concurrent sessions — and why floating-point was the enemy.",
     readingTime: "12 min read",
+    thumbnail: null,
+    tags: ["Performance", "Engineering"],
   },
   {
     title: "CLI-First: Why Your Tool Doesn't Need a Dashboard",
@@ -26,6 +30,8 @@ const FALLBACK_POSTS: MediumPost[] = [
     excerpt:
       "A dashboard is a hypothesis about what your users need. A CLI is a commitment to what they actually do. Building Coldline taught me the difference.",
     readingTime: "8 min read",
+    thumbnail: null,
+    tags: ["DevTools", "UX"],
   },
   {
     title: "Isolation Forests in Production: Lessons from Threshold",
@@ -34,6 +40,8 @@ const FALLBACK_POSTS: MediumPost[] = [
     excerpt:
       "Shipping an ML anomaly detection system as a single binary — cold-start problems, model updates without downtime, and what we got wrong first.",
     readingTime: "15 min read",
+    thumbnail: null,
+    tags: ["Machine Learning", "Production"],
   },
   {
     title: "Zero-Copy Allocators in Rust: A Practical Guide",
@@ -42,6 +50,8 @@ const FALLBACK_POSTS: MediumPost[] = [
     excerpt:
       "Getting to zero GC pauses on the hot path required rewriting our allocator. Here's what we learned, what we stole from jemalloc, and what we invented.",
     readingTime: "18 min read",
+    thumbnail: null,
+    tags: ["Rust", "Systems"],
   },
 ];
 
@@ -63,20 +73,30 @@ function stripHtml(html: string): string {
     .trim();
 }
 
+/** Pull the first <img src="..."> out of raw HTML */
+function extractThumbnail(html: string): string | null {
+  const m = html.match(/<img[^>]+src="([^"]+)"/);
+  return m ? m[1] : null;
+}
+
+/** Parse RSS <category> into a tag array (max 4) */
+function extractTags(raw: Record<string, unknown>): string[] {
+  const cat = raw.category;
+  if (!cat) return [];
+  if (Array.isArray(cat)) return cat.map(String).slice(0, 4);
+  return [String(cat)];
+}
+
 export async function getMediumPosts(username: string): Promise<MediumPost[]> {
   "use cache";
   cacheLife("hours");
 
   function extractUsername(input: string): string {
     if (!input) return "";
-
-    // If full Medium URL
     if (input.includes("medium.com")) {
       const match = input.match(/@([^/?]+)/);
       return match ? match[1] : "";
     }
-
-    // If someone writes @username
     return input.replace("@", "").trim();
   }
 
@@ -98,17 +118,19 @@ export async function getMediumPosts(username: string): Promise<MediumPost[]> {
     const items: unknown[] = feed?.rss?.channel?.item ?? [];
 
     const posts: MediumPost[] = (Array.isArray(items) ? items : [items]).slice(0, 8).map((item) => {
-      const raw = item as Record<string, string>;
-      const content: string = raw["content:encoded"] ?? raw.description ?? "";
-      const excerpt = stripHtml(content).slice(0, 200).trim() + "…";
+      const raw = item as Record<string, unknown>;
+      const content: string = String(raw["content:encoded"] ?? raw.description ?? "");
+      const excerpt = stripHtml(content).slice(0, 220).trim() + "…";
       return {
-        title: stripHtml(raw.title ?? ""),
-        link: raw.link ?? raw.guid ?? "https://medium.com",
+        title: stripHtml(String(raw.title ?? "")),
+        link: String(raw.link ?? raw.guid ?? "https://medium.com"),
         pubDate: raw.pubDate
-          ? new Date(raw.pubDate).toISOString().slice(0, 10)
+          ? new Date(String(raw.pubDate)).toISOString().slice(0, 10)
           : new Date().toISOString().slice(0, 10),
         excerpt,
         readingTime: estimateReadingTime(stripHtml(content)),
+        thumbnail: extractThumbnail(content),
+        tags: extractTags(raw),
       };
     });
 

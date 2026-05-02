@@ -22,6 +22,7 @@ export default function WorkList({ projects }: Props) {
 
   return (
     <>
+      {/* ── Desktop table ── */}
       <table className="work-table">
         <thead>
           <tr>
@@ -45,6 +46,7 @@ export default function WorkList({ projects }: Props) {
               <td className="td-name">
                 <Link href={`/work/${p.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
                   {p.title}
+                  {p.tagline && <span className="td-tagline">{p.tagline}</span>}
                 </Link>
               </td>
               <td className="td-year">{p.year ?? "—"}</td>
@@ -57,10 +59,41 @@ export default function WorkList({ projects }: Props) {
         </tbody>
       </table>
 
-      {/* ── Side panel ── */}
+      {/* ── Mobile card list ── */}
+      <div className="work-cards">
+        {projects.map((p) => (
+          <Link key={p._id} href={`/work/${p.slug}`} className="work-card" data-reveal="">
+            <div className="work-card-img">
+              {p.thumbnail ? (
+                <Image
+                  src={urlFor(p.thumbnail).width(480).height(270).url()}
+                  alt={p.title}
+                  fill
+                  style={{ objectFit: "cover" }}
+                  sizes="100vw"
+                />
+              ) : (
+                <span className="work-card-img__empty">NO PREVIEW</span>
+              )}
+            </div>
+            <div className="work-card-body">
+              <div className="work-card-top">
+                <span className={`td-status ${STATUS_CLASS[p.status] ?? ""}`}>{p.status}</span>
+                {p.year && <span className="work-card-year">{p.year}</span>}
+              </div>
+              <span className="work-card-title">{p.title}</span>
+              {p.tagline && <span className="work-card-tagline">{p.tagline}</span>}
+              {p.stack && p.stack.length > 0 && (
+                <span className="work-card-stack">{p.stack.slice(0, 3).join(" · ")}</span>
+              )}
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* ── Desktop side panel ── */}
       {hovered && (
         <div className="work-panel">
-          {/* Thumbnail */}
           {hovered.thumbnail ? (
             <div
               style={{

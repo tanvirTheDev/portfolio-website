@@ -3,19 +3,48 @@ import KineticHeader from "@/components/ui/KineticHeader";
 import ContactForm from "@/components/pages/ContactForm";
 import { getSiteSettings } from "@/lib/sanity/queries";
 
-export const metadata: Metadata = { title: "Contact" };
+export const metadata: Metadata = {
+  title: "Contact — Tanvir Ahmed",
+  description:
+    "Get in touch with Tanvir Ahmed for freelance work, full-time roles, or project collaborations.",
+  openGraph: {
+    title: "Contact — Tanvir Ahmed",
+    description:
+      "Get in touch with Tanvir Ahmed for freelance work, full-time roles, or project collaborations.",
+    type: "website",
+  },
+};
 
-type SocialLink = { label: string; href: string };
+type SocialLink = { label: string; href: string; short: string };
 
 export default async function ContactPage() {
   const settings = await getSiteSettings().catch(() => null);
 
   const links: SocialLink[] = [];
-  if (settings?.email) links.push({ label: "EMAIL", href: `mailto:${settings.email}` });
-  if (settings?.githubUrl) links.push({ label: "GITHUB", href: settings.githubUrl });
-  if (settings?.linkedinUrl) links.push({ label: "LINKEDIN", href: settings.linkedinUrl });
+  if (settings?.email)
+    links.push({
+      label: "EMAIL",
+      href: `mailto:${settings.email}`,
+      short: settings.email,
+    });
+  if (settings?.githubUrl)
+    links.push({
+      label: "GITHUB",
+      href: settings.githubUrl,
+      short: settings.githubUrl.replace(/^https?:\/\/(www\.)?/, ""),
+    });
+  if (settings?.linkedinUrl)
+    links.push({
+      label: "LINKEDIN",
+      href: settings.linkedinUrl,
+      short: settings.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ""),
+    });
   if (settings?.mediumUsername)
-    links.push({ label: "MEDIUM", href: `https://medium.com/@${settings.mediumUsername}` });
+    links.push({
+      label: "MEDIUM",
+      href: `https://medium.com/@${settings.mediumUsername}`,
+      short: `medium.com/@${settings.mediumUsername}`,
+    });
 
   return (
     <div className="page" style={{ paddingTop: 60, maxWidth: 900 }}>
@@ -23,26 +52,25 @@ export default async function ContactPage() {
 
       <KineticHeader text="TRANSMIT" />
 
-      <ContactForm />
-
+      {/* ── Social links — shown near top before the form ── */}
       {links.length > 0 && (
-        <div className="contact-links">
-          <span className="c-instr" style={{ marginBottom: 4 }}>
-            OR REACH OUT DIRECTLY
-          </span>
-          {links.map(({ label, href }) => (
+        <div className="contact-socials" data-reveal="">
+          {links.map(({ label, href, short }) => (
             <a
               key={label}
-              className="c-link"
+              className="contact-social-link"
               href={href}
               target={href.startsWith("mailto:") ? undefined : "_blank"}
               rel={href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
             >
-              {label} → {href.replace(/^https?:\/\/(www\.)?/, "").replace(/^mailto:/, "")}
+              <span className="contact-social-label">{label}</span>
+              <span className="contact-social-val">{short}</span>
             </a>
           ))}
         </div>
       )}
+
+      <ContactForm />
 
       <div className="deco" style={{ marginTop: 60 }}>
         TRANSMIT

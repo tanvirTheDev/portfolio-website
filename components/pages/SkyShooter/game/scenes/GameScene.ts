@@ -15,6 +15,15 @@ const STAGE_NAMES: Record<number, string> = {
   3: "THE FINAL PUSH",
 };
 
+/** Particle tint per enemy type for explosion variety */
+const ENEMY_TINTS: Record<string, number> = {
+  grunt: 0xf2f0e9, // cream
+  zigzag: 0xffaa00, // orange
+  turret: 0x999999, // grey
+  kamikaze: 0xff3333, // red
+  carrier: 0x00aaff, // cyan-blue
+};
+
 export class GameScene extends Phaser.Scene {
   // ── Core objects ─────────────────────────────────────────────────────────────
   player!: Player;
@@ -432,7 +441,7 @@ export class GameScene extends Phaser.Scene {
 
       this.starsCollected += enemy.starDrop;
       this.score += pts;
-      this.explode(enemy.x, enemy.y, 20);
+      this.explode(enemy.x, enemy.y, 20, ENEMY_TINTS[enemy.eType]);
       soundManager.enemyDie();
       this.spawnPickup(enemy.x, enemy.y, enemy.starDrop);
       this.tryDropPowerup(enemy.x, enemy.y);
@@ -666,6 +675,7 @@ export class GameScene extends Phaser.Scene {
 
   private onStageComplete() {
     this.active = false;
+    soundManager.stopBgm();
     if (this.currentStage >= 3) {
       soundManager.victory();
       EventBus.emit(EV.GAME_WIN, { score: this.score });
@@ -681,6 +691,7 @@ export class GameScene extends Phaser.Scene {
 
   triggerGameOver() {
     this.active = false;
+    soundManager.stopBgm();
     soundManager.gameOver();
     this.player.setVisible(false);
     this.time.delayedCall(800, () => {
@@ -757,6 +768,7 @@ export class GameScene extends Phaser.Scene {
       this.player.setPosition(this.scale.width / 2, this.scale.height - 80);
       this.player.setVisible(true).setActive(true).setAlpha(1);
 
+      soundManager.startBgm();
       this.startWave(1);
     });
 
@@ -777,6 +789,7 @@ export class GameScene extends Phaser.Scene {
       this.player.applyUpgrades(payload.upgrades);
       this.player.setVisible(true).setActive(true).setAlpha(1);
 
+      soundManager.startBgm();
       this.startWave(1);
     });
   }
@@ -829,7 +842,9 @@ export class GameScene extends Phaser.Scene {
   // ── HUD update ────────────────────────────────────────────────────────────────
   private updateHUD() {
     this.scoreTxt.setText(String(this.score).padStart(7, "0"));
-    this.waveTxt.setText(`WAVE ${String(this.currentWave).padStart(2, "0")}`);
+    const total = getWaveCount(this.currentStage);
+    const waveLabel = this.boss?.active ? "BOSS" : `WAVE ${this.currentWave}/${total}`;
+    this.waveTxt.setText(waveLabel);
     this.stageTxt.setText(`STAGE ${this.currentStage}`);
     const l = this.player?.lives ?? 0;
     this.livesTxt.setText("▶".repeat(Math.max(0, l)) + "◻".repeat(Math.max(0, 3 - l)));
@@ -1050,11 +1065,13 @@ export class GameScene extends Phaser.Scene {
       this.physics.pause();
       this.tweens.pauseAll();
       this.time.paused = true;
+      soundManager.pauseBgm();
       this.pauseContainer.setVisible(true);
     } else {
       this.physics.resume();
       this.tweens.resumeAll();
       this.time.paused = false;
+      soundManager.resumeBgm();
       this.pauseContainer.setVisible(false);
     }
   }
@@ -1062,6 +1079,7 @@ export class GameScene extends Phaser.Scene {
   private quitToMenu() {
     this.gamePaused = false;
     this.active = false;
+    soundManager.stopBgm();
     this.physics.resume();
     this.tweens.resumeAll();
     this.time.paused = false;
@@ -1075,6 +1093,7 @@ export class GameScene extends Phaser.Scene {
 
   // ── Cleanup ───────────────────────────────────────────────────────────────────
   shutdown() {
+    soundManager.stopBgm();
     EventBus.off(EV.START_GAME);
     EventBus.off(EV.RESUME_STAGE);
     this.scale.off("resize", this.onResize, this);

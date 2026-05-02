@@ -3,9 +3,18 @@
  * All sounds are synthesised from oscillators + noise at runtime.
  */
 
+// A-minor pentatonic arpeggio (Hz) — ambient space-shooter feel
+const BGM_NOTES = [110, 130.8, 146.8, 164.8, 196, 164.8, 146.8, 130.8];
+const BGM_STEP_MS = 500; // ms per note
+
 class SoundManager {
   private ctx: AudioContext | null = null;
   muted = false;
+
+  // ── Background music state ────────────────────────────────────────────────
+  private bgmTimer?: ReturnType<typeof setTimeout>;
+  private bgmStep = 0;
+  private bgmRunning = false;
 
   // ── AudioContext (lazy, resumes on first user gesture) ────────────────────
   private getCtx(): AudioContext | null {
@@ -21,7 +30,52 @@ class SoundManager {
 
   toggleMute() {
     this.muted = !this.muted;
+    if (this.muted) this.stopBgm();
     return this.muted;
+  }
+
+  // ── Background music ──────────────────────────────────────────────────────
+  startBgm() {
+    if (this.muted || this.bgmRunning) return;
+    this.bgmRunning = true;
+    this.bgmStep = 0;
+    this.scheduleBgmNote();
+  }
+
+  stopBgm() {
+    this.bgmRunning = false;
+    if (this.bgmTimer !== undefined) {
+      clearTimeout(this.bgmTimer);
+      this.bgmTimer = undefined;
+    }
+  }
+
+  pauseBgm() {
+    if (!this.bgmRunning) return;
+    if (this.bgmTimer !== undefined) {
+      clearTimeout(this.bgmTimer);
+      this.bgmTimer = undefined;
+    }
+  }
+
+  resumeBgm() {
+    if (!this.bgmRunning || this.muted) return;
+    this.scheduleBgmNote();
+  }
+
+  private scheduleBgmNote() {
+    if (!this.bgmRunning || this.muted) return;
+    const freq = BGM_NOTES[this.bgmStep % BGM_NOTES.length];
+    this.bgmStep++;
+
+    // Quiet sine pad note
+    this.osc(freq, "sine", BGM_STEP_MS * 0.0009, 0.022, freq * 0.998);
+    // Sub-bass pulse every 4 steps
+    if (this.bgmStep % 4 === 0) {
+      this.osc(freq / 2, "sine", BGM_STEP_MS * 0.0015, 0.016, freq / 2);
+    }
+
+    this.bgmTimer = setTimeout(() => this.scheduleBgmNote(), BGM_STEP_MS);
   }
 
   // ── Primitive builders ────────────────────────────────────────────────────

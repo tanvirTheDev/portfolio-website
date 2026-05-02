@@ -1588,6 +1588,16 @@ svg {
   height: 100% !important;
 }
 
+/* Vignette — darkens corners for depth/focus */
+.sky-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.62) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
 /* CRT scanlines — subtle horizontal lines over the canvas */
 .sky-canvas::after {
   content: "";

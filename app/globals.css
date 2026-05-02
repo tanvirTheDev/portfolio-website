@@ -1337,3 +1337,126 @@ svg {
     display: none;
   }
 }
+
+/* ── SPACE SHOOTER ── */
+.shooter-wrap {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 52px);
+  overflow: hidden;
+  background: var(--bg);
+}
+.shooter-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.shooter-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--fg);
+  opacity: 0.55;
+  pointer-events: none;
+  border-bottom: 1px solid var(--border);
+  background: rgba(10, 10, 10, 0.6);
+}
+.shooter-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 10, 0.82);
+}
+.shooter-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 48px;
+  border: 1px solid var(--border);
+  min-width: 340px;
+  max-width: 480px;
+  text-align: center;
+}
+.so-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.so-title--danger {
+  color: #ff4d4d;
+}
+.so-sub {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.35;
+}
+.so-sep {
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+.so-line {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg);
+  opacity: 0.7;
+}
+.so-line--dim {
+  opacity: 0.28;
+}
+.so-accent {
+  color: var(--accent);
+}
+.so-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 4px;
+}
+.so-btn {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  padding: 10px 18px;
+  text-decoration: none;
+  display: inline-block;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
+  cursor: none;
+}
+.so-btn:hover {
+  border-color: var(--fg);
+  color: var(--fg);
+}
+.so-btn--accent {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.so-btn--accent:hover {
+  background: var(--accent);
+  color: var(--bg);
+}

@@ -25,6 +25,7 @@ const DIR_PAGES = [
   { href: "/certificates", label: "CERTIFICATES", idx: "004", desc: "Credentials" },
   { href: "/blog", label: "BLOG", idx: "005", desc: "Writing" },
   { href: "/contact", label: "CONTACT", idx: "006", desc: "Get in touch" },
+  { href: "/play", label: "PLAY", idx: "007", desc: "Space Shooter" },
 ] as const;
 
 export default async function HomePage() {

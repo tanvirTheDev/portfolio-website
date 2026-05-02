@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { label: "CERTIFICATES", href: "/certificates", key: "4" },
   { label: "BLOG", href: "/blog", key: "5" },
   { label: "CONTACT", href: "/contact", key: "6" },
+  { label: "PLAY", href: "/play", key: "7" },
 ] as const;
 
 interface Props {

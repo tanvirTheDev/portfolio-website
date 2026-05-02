@@ -3,6 +3,19 @@ import KineticHeader from "@/components/ui/KineticHeader";
 import ContactForm from "@/components/pages/ContactForm";
 import { getSiteSettings } from "@/lib/sanity/queries";
 
+/** Extract YouTube video ID from any common URL format */
+function getYouTubeId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname === "youtu.be") return u.pathname.slice(1).split("?")[0];
+    if (u.hostname.includes("youtube.com")) {
+      if (u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2];
+      return u.searchParams.get("v");
+    }
+  } catch {}
+  return null;
+}
+
 export const metadata: Metadata = {
   title: "Contact — Tanvir Ahmed",
   description:
@@ -19,6 +32,7 @@ type SocialLink = { label: string; href: string; short: string };
 
 export default async function ContactPage() {
   const settings = await getSiteSettings().catch(() => null);
+  const videoId = settings?.introVideoUrl ? getYouTubeId(settings.introVideoUrl) : null;
 
   const links: SocialLink[] = [];
   if (settings?.email)
@@ -67,6 +81,25 @@ export default async function ContactPage() {
               <span className="contact-social-val">{short}</span>
             </a>
           ))}
+        </div>
+      )}
+
+      {/* ── INTRO VIDEO — closes the deal before they hit send ── */}
+      {videoId && (
+        <div className="contact-video-wrap" data-reveal="">
+          <div className="contact-video-label">
+            <span className="contact-video-tag">MEET THE DEVELOPER</span>
+            <span className="contact-video-dur">· 1:30</span>
+          </div>
+          <div className="video-wrap">
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`}
+              title={`${settings?.name ?? "Developer"} — intro video`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              loading="lazy"
+            />
+          </div>
         </div>
       )}
 

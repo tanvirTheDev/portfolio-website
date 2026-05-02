@@ -147,13 +147,23 @@ export default async function HomePage() {
           <Link href="/contact" className="btn">
             GET IN TOUCH
           </Link>
+          {videoId && (
+            <a href="#intro-video" className="btn btn-video">
+              ▶ WATCH INTRO · 90s
+            </a>
+          )}
         </div>
       </div>
 
-      {/* ── INTRO VIDEO — only renders when Sanity URL is set ── */}
+      {/* ── INTRO VIDEO — opt-in section below hero ── */}
       {videoId && (
-        <div className="intro-video-wrap" data-reveal="">
-          <span className="slabel">INTRO.VIDEO</span>
+        <div className="intro-video-wrap" id="intro-video" data-reveal="">
+          <div className="intro-video-label">
+            <span className="slabel">INTRO.VIDEO</span>
+            <span className="intro-video-meta">
+              WHO IS {(settings?.name ?? "TANVIR").toUpperCase()} · 1:30
+            </span>
+          </div>
           <div className="video-wrap">
             <iframe
               src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`}

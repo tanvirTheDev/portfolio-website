@@ -40,6 +40,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   formY = 0; // target Y for the entry phase
   phase: "entry" | "patrol" = "entry";
 
+  /** Speed multiplier — set by GameScene based on current stage */
+  speedMult = 1.0;
+
   /** Per-type movement accumulators */
   sineT = 0; // grunt / zigzag oscillation timer
   diveVx = 0; // kamikaze resolved velocity
@@ -110,8 +113,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   // ── Movement patterns ─────────────────────────────────────────────────────────
   private moveGrunt(dt: number, W: number, body: Phaser.Physics.Arcade.Body) {
+    const sm = this.speedMult;
     if (this.phase === "entry") {
-      body.setVelocityY(130);
+      body.setVelocityY(130 * sm);
       if (this.y >= this.formY) {
         this.setY(this.formY);
         body.setVelocity(0, 0);
@@ -119,27 +123,29 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       }
     } else {
       this.sineT += dt;
-      body.setVelocityX(Math.sin(this.sineT * 1.2) * 65);
-      body.setVelocityY(16);
+      body.setVelocityX(Math.sin(this.sineT * 1.2) * 65 * sm);
+      body.setVelocityY(16 * sm);
       this.clampX(W, 30);
     }
   }
 
   private moveZigzag(dt: number, W: number, body: Phaser.Physics.Arcade.Body) {
+    const sm = this.speedMult;
     this.sineT += dt;
     if (this.phase === "entry") {
-      body.setVelocityY(120);
+      body.setVelocityY(120 * sm);
       if (this.y >= this.formY) this.phase = "patrol";
     } else {
-      body.setVelocityX(Math.sin(this.sineT * 2.6) * 170);
-      body.setVelocityY(28);
+      body.setVelocityX(Math.sin(this.sineT * 2.6) * 170 * sm);
+      body.setVelocityY(28 * sm);
       this.clampX(W, 24);
     }
   }
 
   private moveTurret(dt: number, W: number, body: Phaser.Physics.Arcade.Body) {
+    const sm = this.speedMult;
     if (this.phase === "entry") {
-      body.setVelocityY(90);
+      body.setVelocityY(90 * sm);
       if (this.y >= this.formY) {
         body.setVelocity(0, 0);
         this.sineT = Math.random() * Math.PI * 2;
@@ -147,7 +153,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       }
     } else {
       this.sineT += dt;
-      body.setVelocityX(Math.sin(this.sineT * 0.65) * 42);
+      body.setVelocityX(Math.sin(this.sineT * 0.65) * 42 * sm);
       body.setVelocityY(0);
       this.clampX(W, 30);
     }
@@ -159,14 +165,15 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     playerY: number,
     body: Phaser.Physics.Arcade.Body
   ) {
+    const sm = this.speedMult;
     if (this.phase === "entry") {
-      body.setVelocityY(70);
+      body.setVelocityY(70 * sm);
       if (this.y >= this.formY) {
         // Lock dive direction toward player
         const dx = playerX - this.x;
         const dy = playerY - this.y;
         const mag = Math.sqrt(dx * dx + dy * dy) || 1;
-        const spd = 360;
+        const spd = 360 * sm;
         this.diveVx = (dx / mag) * spd;
         this.diveVy = (dy / mag) * spd;
         this.phase = "patrol";
@@ -176,24 +183,26 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       const dx = playerX - this.x;
       this.diveVx += dx * dt * 0.9;
       // Cap overall speed
+      const cap = 420 * sm;
       const spd = Math.hypot(this.diveVx, this.diveVy);
-      if (spd > 420) {
-        this.diveVx = (this.diveVx / spd) * 420;
-        this.diveVy = (this.diveVy / spd) * 420;
+      if (spd > cap) {
+        this.diveVx = (this.diveVx / spd) * cap;
+        this.diveVy = (this.diveVy / spd) * cap;
       }
       body.setVelocity(this.diveVx, this.diveVy);
     }
   }
 
   private moveCarrier(dt: number, W: number, body: Phaser.Physics.Arcade.Body) {
+    const sm = this.speedMult;
     if (this.phase === "entry") {
-      body.setVelocityY(55);
+      body.setVelocityY(55 * sm);
       if (this.y >= this.formY) {
         body.setVelocityY(0);
         this.phase = "patrol";
       }
     } else {
-      body.setVelocityX(this.carrierDir * 40);
+      body.setVelocityX(this.carrierDir * 40 * sm);
       body.setVelocityY(0);
       if (this.x > W - 60) this.carrierDir = -1;
       if (this.x < 60) this.carrierDir = 1;

@@ -147,16 +147,24 @@ export default function SkyShooter() {
       await saveAndFetchLeaderboard(p.score, 3);
     };
 
+    const onQuitToMenu = () => {
+      setPhase("name_input");
+      setStageNum(1);
+      setUpgrades({ ...DEFAULT_UPGRADES });
+    };
+
     EventBus.on(EV.SCORE_UPDATE, onScore);
     EventBus.on(EV.STAGE_COMPLETE, onStageComplete);
     EventBus.on(EV.GAME_OVER, onGameOver);
     EventBus.on(EV.GAME_WIN, onGameWin);
+    EventBus.on(EV.QUIT_TO_MENU, onQuitToMenu);
 
     return () => {
       EventBus.off(EV.SCORE_UPDATE, onScore);
       EventBus.off(EV.STAGE_COMPLETE, onStageComplete);
       EventBus.off(EV.GAME_OVER, onGameOver);
       EventBus.off(EV.GAME_WIN, onGameWin);
+      EventBus.off(EV.QUIT_TO_MENU, onQuitToMenu);
     };
   }, [saveAndFetchLeaderboard]);
 
@@ -223,7 +231,9 @@ export default function SkyShooter() {
             <p className="sky-hint">
               ARROWS / WASD — MOVE &nbsp;·&nbsp; SPACE — FIRE &nbsp;·&nbsp; X — BOMB
             </p>
-            <p className="sky-hint sky-hint--dim">3 STAGES · UPGRADES BETWEEN STAGES</p>
+            <p className="sky-hint sky-hint--dim">
+              P / ESC — PAUSE &nbsp;·&nbsp; 3 STAGES · UPGRADES BETWEEN STAGES
+            </p>
             {bestScore > 0 && (
               <p className="sky-hint sky-hint--best">
                 PERSONAL BEST &nbsp;·&nbsp; {fmt7(bestScore)}

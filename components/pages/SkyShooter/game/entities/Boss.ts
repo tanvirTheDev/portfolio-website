@@ -11,6 +11,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
   hp: number;
   phase = 1; // 1 → 2 at 60 % HP, 2 → 3 (stage 3 only) at 30 %
   entry = true;
+  private readonly baseTint: number; // per-stage colour
 
   // Movement
   moveT = 0;
@@ -33,9 +34,13 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
+    // Stage-based base tint: neutral → warm orange → angry red
+    this.baseTint = stageNum === 3 ? 0xff8888 : stageNum === 2 ? 0xffcc88 : 0xffffff;
+
     this.setDepth(6)
       .setFlipY(true)
       .setScale(1 + stageNum * 0.18);
+    if (stageNum > 1) this.setTint(this.baseTint);
 
     const body = this.body as Phaser.Physics.Arcade.Body;
     body.setAllowGravity(false);
@@ -152,7 +157,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     this.hp -= dmg;
     this.setTint(0xff6666);
     this.scene.time.delayedCall(90, () => {
-      if (this.active) this.clearTint();
+      if (this.active) this.setTint(this.baseTint);
     });
 
     const pct = this.hp / this.maxHp;
@@ -164,7 +169,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
       this.scene.cameras.main.flash(120, 255, 100, 30);
       this.setTint(0xff4400);
       this.scene.time.delayedCall(500, () => {
-        if (this.active) this.clearTint();
+        if (this.active) this.setTint(this.baseTint);
       });
     }
     if (this.phase === 2 && this.stageNum >= 3 && pct <= 0.3) {
@@ -174,7 +179,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
       this.scene.cameras.main.flash(180, 255, 60, 30);
       this.setTint(0xff0000);
       this.scene.time.delayedCall(600, () => {
-        if (this.active) this.clearTint();
+        if (this.active) this.setTint(this.baseTint);
       });
     }
 

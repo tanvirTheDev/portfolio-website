@@ -23,6 +23,9 @@ export const EV = {
   // React → Phaser
   START_GAME: "start-game", // { playerName, upgrades }
   RESUME_STAGE: "resume-stage", // { upgrades }
+
+  // Phaser → React (player quit from pause menu)
+  QUIT_TO_MENU: "quit-to-menu",
 } as const;
 
 export type ScorePayload = { score: number; lives: number; stars: number; wave: number };

@@ -9,6 +9,12 @@ import { soundManager } from "../SoundManager";
 
 const SCROLL_SPEED = 60; // px/s for background parallax
 
+const STAGE_NAMES: Record<number, string> = {
+  1: "BEGIN",
+  2: "ESCALATION",
+  3: "THE FINAL PUSH",
+};
+
 export class GameScene extends Phaser.Scene {
   // ── Core objects ─────────────────────────────────────────────────────────────
   player!: Player;
@@ -74,6 +80,15 @@ export class GameScene extends Phaser.Scene {
   // ── Mobile touch ─────────────────────────────────────────────────────────────
   touchFiring = false;
 
+  // ── Pause ─────────────────────────────────────────────────────────────────────
+  gamePaused = false;
+  pauseKey!: Phaser.Input.Keyboard.Key;
+  escKey!: Phaser.Input.Keyboard.Key;
+  pauseContainer!: Phaser.GameObjects.Container;
+
+  // ── Wave perfect tracking ─────────────────────────────────────────────────────
+  waveHitCount = 0; // life-damage hits taken this wave (0 = perfect)
+
   constructor() {
     super({ key: "GameScene" });
   }
@@ -89,6 +104,7 @@ export class GameScene extends Phaser.Scene {
     this.createExplosionEmitter();
     this.setupInput();
     this.setupColliders();
+    this.createPauseOverlay();
     this.setupEventBus();
     this.scale.on("resize", this.onResize, this);
 
@@ -96,7 +112,18 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number) {
-    if (!this.active) return;
+    // Pause toggle checked while active or already paused
+    if (this.active || this.gamePaused) {
+      if (
+        Phaser.Input.Keyboard.JustDown(this.pauseKey) ||
+        Phaser.Input.Keyboard.JustDown(this.escKey)
+      ) {
+        this.togglePause();
+        return;
+      }
+    }
+
+    if (!this.active || this.gamePaused) return;
 
     const { width: W, height: H } = this.scale;
 
@@ -288,6 +315,8 @@ export class GameScene extends Phaser.Scene {
     };
     this.fireKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.bombKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.X);
+    this.pauseKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.P);
+    this.escKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
     // Touch: drag to follow finger (X + Y), auto-fire while held
     this.input.on("pointermove", (ptr: Phaser.Input.Pointer) => {
@@ -445,6 +474,7 @@ export class GameScene extends Phaser.Scene {
   // ── Wave spawning ─────────────────────────────────────────────────────────────
   startWave(wave: number) {
     this.currentWave = wave;
+    this.waveHitCount = 0;
     this.waveClearFired = false;
     this.updateHUD();
 
@@ -460,7 +490,8 @@ export class GameScene extends Phaser.Scene {
       this.showBanner("⚠ BOSS INCOMING ⚠", "#ff4444");
       this.time.delayedCall(1200, () => this.spawnBoss());
     } else {
-      const label = wave === 1 ? `STAGE ${this.currentStage} — BEGIN` : `WAVE ${wave}`;
+      const stageName = STAGE_NAMES[this.currentStage] ?? "BEGIN";
+      const label = wave === 1 ? `STAGE ${this.currentStage} — ${stageName}` : `WAVE ${wave}`;
       this.showBanner(label, "#e8ff00");
       this.time.delayedCall(700, () => {
         if (!this.active) return;
@@ -495,6 +526,7 @@ export class GameScene extends Phaser.Scene {
           }
           const e = new Enemy(this, ex, -60 - row * 30, spec.type, hpM);
           e.formY = ef;
+          e.speedMult = 1 + (this.currentStage - 1) * 0.22; // 1.0 / 1.22 / 1.44
           this.enemies.add(e);
           this.pendingSpawns--;
         });
@@ -543,10 +575,13 @@ export class GameScene extends Phaser.Scene {
     this.comboCount = 0; // break combo on damage
     const result = this.player.hit();
     if (result === "dead") {
+      this.waveHitCount++;
       this.triggerGameOver();
     } else if (result === "life") {
+      this.waveHitCount++;
       this.explode(this.player.x, this.player.y, 14, 0xff4444);
     }
+    // "shield" result: shielded hit doesn't break the perfect streak
     this.broadcastScore();
   }
 
@@ -565,12 +600,52 @@ export class GameScene extends Phaser.Scene {
   }
 
   private onWaveCleared() {
+    if (this.waveHitCount === 0) {
+      const bonus = 500 * this.currentWave;
+      this.score += bonus;
+      this.broadcastScore();
+      this.showPerfectWave(bonus);
+      // Extra pause so the player sees the banner before next wave begins
+      this.time.delayedCall(1400, () => {
+        if (this.active) this.advanceWave();
+      });
+      return;
+    }
+    this.advanceWave();
+  }
+
+  private advanceWave() {
     const maxWaves = getWaveCount(this.currentStage);
     if (this.currentWave < maxWaves) {
       this.startWave(this.currentWave + 1);
     } else {
       this.onStageComplete();
     }
+  }
+
+  private showPerfectWave(bonus: number) {
+    const W = this.scale.width;
+    const H = this.scale.height;
+    const style: Phaser.Types.GameObjects.Text.TextStyle = {
+      fontFamily: '"JetBrains Mono", monospace',
+      fontSize: "16px",
+      color: "#44ff88",
+      stroke: "#000000",
+      strokeThickness: 3,
+    };
+    const txt = this.add
+      .text(W / 2, H / 2 + 14, `PERFECT WAVE  +${bonus}`, style)
+      .setDepth(35)
+      .setOrigin(0.5)
+      .setScrollFactor(0);
+    this.tweens.add({
+      targets: txt,
+      y: H / 2 - 40,
+      alpha: { from: 1, to: 0 },
+      duration: 1300,
+      ease: "Power1",
+      onComplete: () => txt.destroy(),
+    });
   }
 
   private onBossKilled() {
@@ -668,6 +743,8 @@ export class GameScene extends Phaser.Scene {
       this.currentWave = 0;
       this.comboCount = 0;
       this.lastKillTime = 0;
+      this.waveHitCount = 0;
+      this.gamePaused = false;
       this.comboTxtTimer?.remove();
       this.comboTxt.setVisible(false).setAlpha(0);
       this.active = true;
@@ -690,6 +767,8 @@ export class GameScene extends Phaser.Scene {
       this.starsCollected = 0;
       this.comboCount = 0;
       this.lastKillTime = 0;
+      this.waveHitCount = 0;
+      this.gamePaused = false;
       this.comboTxtTimer?.remove();
       this.comboTxt.setVisible(false).setAlpha(0);
       this.active = true;
@@ -773,6 +852,7 @@ export class GameScene extends Phaser.Scene {
     this.muteBtn?.setX(W - 16);
     this.waveBanner?.setPosition(W / 2, H / 2 - 40);
     this.comboTxt?.setPosition(W / 2, H - 28);
+    this.pauseContainer?.setPosition(W / 2, H / 2);
   }
 
   // ── Power-up drops ────────────────────────────────────────────────────────────
@@ -920,6 +1000,77 @@ export class GameScene extends Phaser.Scene {
       ease: "Power1",
       onComplete: () => txt.destroy(),
     });
+  }
+
+  // ── Pause overlay ─────────────────────────────────────────────────────────────
+  private createPauseOverlay() {
+    const { width: W, height: H } = this.scale;
+    const mono = (size: number, color = "#f2f0e9"): Phaser.Types.GameObjects.Text.TextStyle => ({
+      fontFamily: '"JetBrains Mono", monospace',
+      fontSize: `${size}px`,
+      color,
+      stroke: "#000000",
+      strokeThickness: 3,
+    });
+
+    // Oversized background so it covers screen after resize
+    const bg = this.add.rectangle(0, 0, W + 400, H + 400, 0x000000, 0.82);
+
+    const title = this.add.text(0, -90, "PAUSED", mono(26, "#e8ff00")).setOrigin(0.5);
+
+    const hint = this.add.text(0, -50, "P / ESC — TOGGLE", mono(8, "#555555")).setOrigin(0.5);
+
+    const resumeBtn = this.add
+      .text(0, 4, "[ RESUME ]", mono(12, "#f2f0e9"))
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .on("pointerover", () => resumeBtn.setColor("#e8ff00"))
+      .on("pointerout", () => resumeBtn.setColor("#f2f0e9"))
+      .on("pointerdown", () => this.togglePause());
+
+    const quitBtn = this.add
+      .text(0, 54, "[ QUIT TO MENU ]", mono(12, "#f2f0e9"))
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .on("pointerover", () => quitBtn.setColor("#ff4444"))
+      .on("pointerout", () => quitBtn.setColor("#f2f0e9"))
+      .on("pointerdown", () => this.quitToMenu());
+
+    this.pauseContainer = this.add
+      .container(W / 2, H / 2, [bg, title, hint, resumeBtn, quitBtn])
+      .setDepth(60)
+      .setScrollFactor(0)
+      .setVisible(false);
+  }
+
+  private togglePause() {
+    if (!this.active && !this.gamePaused) return;
+    this.gamePaused = !this.gamePaused;
+    if (this.gamePaused) {
+      this.physics.pause();
+      this.tweens.pauseAll();
+      this.time.paused = true;
+      this.pauseContainer.setVisible(true);
+    } else {
+      this.physics.resume();
+      this.tweens.resumeAll();
+      this.time.paused = false;
+      this.pauseContainer.setVisible(false);
+    }
+  }
+
+  private quitToMenu() {
+    this.gamePaused = false;
+    this.active = false;
+    this.physics.resume();
+    this.tweens.resumeAll();
+    this.time.paused = false;
+    this.pauseContainer.setVisible(false);
+    this.comboTxtTimer?.remove();
+    this.comboTxt.setVisible(false).setAlpha(0);
+    this.player.setVisible(false).setAlpha(1);
+    this.clearAllEnemies();
+    EventBus.emit(EV.QUIT_TO_MENU);
   }
 
   // ── Cleanup ───────────────────────────────────────────────────────────────────

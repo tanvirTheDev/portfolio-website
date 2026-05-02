@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect, useRef } from "react";
 import { sendMessage, type ContactState } from "@/app/(site)/contact/actions";
 import { useAudio } from "@/lib/audio";
+import { gtagEvent } from "@/lib/gtag";
 
 const MAX = 500;
 const INITIAL: ContactState = { status: "idle" };
@@ -11,8 +12,37 @@ export default function ContactForm() {
   const [state, action, pending] = useActionState(sendMessage, INITIAL);
   const [charCount, setCharCount] = useState(0);
   const { clack } = useAudio();
+  const trackedResult = useRef<string | null>(null);
 
   const ts = new Date().toISOString().replace("T", " ").slice(0, 19) + "Z";
+
+  // Track form submission result once (success or error)
+  useEffect(() => {
+    if (state.status === "success" && trackedResult.current !== "success") {
+      trackedResult.current = "success";
+      gtagEvent("contact_form_success", {
+        event_category: "Contact",
+        event_label: "Form submitted successfully",
+      });
+    }
+    if (state.status === "error" && trackedResult.current !== "error") {
+      trackedResult.current = "error";
+      gtagEvent("contact_form_error", {
+        event_category: "Contact",
+        event_label: state.error ?? "Unknown error",
+      });
+    }
+  }, [state.status, state.error]);
+
+  function handleSubmitClick() {
+    clack();
+    // Track every time someone hits TRANSMIT (whether they succeed or not)
+    gtagEvent("contact_form_submit_attempt", {
+      event_category: "Contact",
+      event_label: "Transmit button clicked",
+      char_count: charCount,
+    });
+  }
 
   return (
     <>
@@ -30,7 +60,7 @@ export default function ContactForm() {
         />
 
         <div className="send-row">
-          <button type="submit" className="send-btn" disabled={pending} onClick={clack}>
+          <button type="submit" className="send-btn" disabled={pending} onClick={handleSubmitClick}>
             {pending ? "TRANSMITTING…" : "TRANSMIT →"}
           </button>
           <div className="ccount">

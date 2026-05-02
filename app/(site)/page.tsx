@@ -9,6 +9,7 @@ import {
 import { getMediumPosts } from "@/lib/medium";
 import BuildStamp from "@/components/ui/BuildStamp";
 import KineticTitleLoader from "@/components/physics/KineticTitleLoader";
+import TrackedLink from "@/components/ui/TrackedLink";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -155,14 +156,17 @@ export default async function HomePage() {
             {settings?.tagline ?? "FULL-STACK DEVELOPER · REACT · NODE.JS · TYPESCRIPT"}
           </p>
           {settings?.resumeFile?.asset?.url && (
-            <a
+            <TrackedLink
               href={settings.resumeFile.asset.url}
               target="_blank"
               rel="noopener noreferrer"
               className="home-hero__resume"
+              eventName="resume_download"
+              eventLabel="Hero — Download Résumé"
+              eventCategory="Engagement"
             >
               ↓ DOWNLOAD RÉSUMÉ
-            </a>
+            </TrackedLink>
           )}
         </div>
         <div className="home-hero__actions">
@@ -173,9 +177,15 @@ export default async function HomePage() {
             GET IN TOUCH
           </Link>
           {videoId && (
-            <a href="#intro-video" className="btn btn-video">
+            <TrackedLink
+              href="#intro-video"
+              className="btn btn-video"
+              eventName="intro_video_click"
+              eventLabel="Hero — Watch Intro button"
+              eventCategory="Engagement"
+            >
               ▶ WATCH INTRO · 90s
-            </a>
+            </TrackedLink>
           )}
         </div>
       </div>

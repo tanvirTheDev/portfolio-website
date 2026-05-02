@@ -6,6 +6,19 @@ import KineticTitleLoader from "@/components/physics/KineticTitleLoader";
 
 export const metadata: Metadata = { title: "Index" };
 
+/** Extract YouTube video ID from any common URL format */
+function getYouTubeId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname === "youtu.be") return u.pathname.slice(1).split("?")[0];
+    if (u.hostname.includes("youtube.com")) {
+      if (u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2];
+      return u.searchParams.get("v");
+    }
+  } catch {}
+  return null;
+}
+
 const DIR_PAGES = [
   { href: "/work", label: "WORK", idx: "002", desc: "Projects" },
   { href: "/experience", label: "EXPERIENCE", idx: "003", desc: "Timeline" },
@@ -21,6 +34,7 @@ export default async function HomePage() {
   ]);
 
   const availability = settings?.availability;
+  const videoId = settings?.introVideoUrl ? getYouTubeId(settings.introVideoUrl) : null;
   const isAvailable = availability?.available ?? false;
   const availLabel =
     availability?.label?.trim() || (isAvailable ? "AVAILABLE FOR WORK" : "CURRENTLY ENGAGED");
@@ -37,6 +51,22 @@ export default async function HomePage() {
             <span className="avail-dot" aria-hidden />
             <span>STATUS · {availLabel}</span>
           </span>
+        </div>
+      )}
+
+      {/* ── INTRO VIDEO — only renders when Sanity URL is set ── */}
+      {videoId && (
+        <div className="intro-video-wrap" data-reveal="">
+          <span className="slabel">INTRO.VIDEO</span>
+          <div className="video-wrap">
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`}
+              title={`${settings?.name ?? "Developer"} — intro video`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              loading="lazy"
+            />
+          </div>
         </div>
       )}
 

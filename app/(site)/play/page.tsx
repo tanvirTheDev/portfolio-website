@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
-import SpaceShooter from "@/components/pages/SpaceShooter";
+import dynamic from "next/dynamic";
 
 export const metadata: Metadata = {
   title: "Play",
-  description: "Space Shooter — defend the codebase. A mini game built into the portfolio.",
+  description: "Sky Shooter — 3-stage space combat game with persistent upgrades and leaderboard.",
 };
 
+const SkyShooter = dynamic(() => import("@/components/pages/SkyShooter"), {
+  ssr: false,
+  loading: () => (
+    <div className="sky-wrap sky-loading">
+      <span>LOADING MISSION...</span>
+    </div>
+  ),
+});
+
 export default function PlayPage() {
-  return <SpaceShooter />;
+  return <SkyShooter />;
 }

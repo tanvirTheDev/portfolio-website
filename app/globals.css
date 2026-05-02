@@ -1550,3 +1550,357 @@ svg {
   background: var(--accent);
   color: var(--bg);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SKY SHOOTER  /play
+───────────────────────────────────────────────────────────────────────────── */
+
+/* Root wrapper — fills the viewport, dark bg */
+.sky-wrap {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  background: #0a0a0a;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sky-loading {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: #e8ff00;
+  text-transform: uppercase;
+}
+
+/* Phaser canvas mount */
+.sky-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+.sky-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ── Overlays ── */
+.sky-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 10, 0.88);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+}
+
+.sky-screen {
+  font-family: "JetBrains Mono", monospace;
+  background: #0e0e0e;
+  border: 1px solid #2a2a2a;
+  padding: 36px 32px;
+  max-width: 380px;
+  width: calc(100% - 40px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.sky-screen--wide {
+  max-width: 520px;
+}
+
+/* ── Typography ── */
+.sky-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: #e8ff00;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.sky-title--danger {
+  color: #ff4444;
+}
+
+.sky-sub {
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: #666;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.sky-label {
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.sky-hint {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: #666;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.sky-hint--dim {
+  color: #444;
+}
+
+.sky-error {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: #ff4444;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.sky-rank {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: #e8ff00;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* ── Score big display ── */
+.sky-score-big {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #f2f0e9;
+  margin: 0;
+}
+
+/* ── Separator ── */
+.sky-sep {
+  width: 100%;
+  height: 1px;
+  background: #1e1e1e;
+  margin: 4px 0;
+}
+
+/* ── Input ── */
+.sky-input {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  text-align: center;
+  background: #111;
+  border: 1px solid #333;
+  color: #e8ff00;
+  padding: 12px 16px;
+  width: 100%;
+  outline: none;
+  caret-color: #e8ff00;
+  transition: border-color 0.15s;
+}
+.sky-input:focus {
+  border-color: #e8ff00;
+}
+.sky-input::placeholder {
+  color: #444;
+  letter-spacing: 0.2em;
+}
+
+/* ── Buttons ── */
+.sky-btn {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  background: none;
+  border: 1px solid #333;
+  color: #f2f0e9;
+  padding: 12px 20px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
+}
+.sky-btn:hover {
+  border-color: #f2f0e9;
+  color: #f2f0e9;
+}
+.sky-btn--accent {
+  border-color: #e8ff00;
+  color: #e8ff00;
+}
+.sky-btn--accent:hover {
+  background: #e8ff00;
+  color: #0a0a0a;
+}
+
+.sky-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ── Stars available ── */
+.sky-stars-avail {
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  color: #888;
+  font-family: "JetBrains Mono", monospace;
+  text-transform: uppercase;
+}
+
+/* ── Upgrades grid ── */
+.sky-upgrades {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.sky-upg {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #111;
+  border: 1px solid #1e1e1e;
+}
+
+.sky-upg-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.sky-upg-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.sky-upg-desc {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: #555;
+  font-family: "JetBrains Mono", monospace;
+  text-transform: uppercase;
+}
+
+.sky-upg-pips {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.sky-pip {
+  width: 8px;
+  height: 8px;
+  background: #222;
+  border: 1px solid #333;
+}
+
+.sky-pip--on {
+  border-color: transparent;
+}
+
+.sky-upg-btn {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  background: none;
+  border: 1px solid #e8ff00;
+  color: #e8ff00;
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.12s,
+    color 0.12s;
+  min-width: 52px;
+}
+.sky-upg-btn:hover:not(.sky-upg-btn--disabled) {
+  background: #e8ff00;
+  color: #0a0a0a;
+}
+.sky-upg-btn--disabled {
+  border-color: #333;
+  color: #444;
+  cursor: not-allowed;
+}
+
+/* ── Leaderboard ── */
+.sky-lb {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.sky-lb-hdr {
+  display: grid;
+  grid-template-columns: 28px 1fr 80px 32px;
+  gap: 8px;
+  font-size: 8px;
+  letter-spacing: 0.25em;
+  color: #444;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-bottom: 1px solid #1e1e1e;
+}
+
+.sky-lb-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 80px 32px;
+  gap: 8px;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: #666;
+  text-transform: uppercase;
+  padding: 5px 8px;
+  transition: background 0.1s;
+}
+.sky-lb-row:hover {
+  background: #111;
+}
+.sky-lb-row--me {
+  color: #e8ff00;
+  background: #0f0f00;
+}
+.sky-lb-row--me:hover {
+  background: #141400;
+}
+
+.sky-lb-loading {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: #444;
+  text-align: center;
+  padding: 12px 0;
+  font-family: "JetBrains Mono", monospace;
+  text-transform: uppercase;
+  margin: 0;
+}

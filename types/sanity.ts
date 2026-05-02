@@ -71,6 +71,18 @@ export type Availability = {
   label?: string;
 };
 
+// ── Leaderboard Score ─────────────────────────────────────────────────────────
+
+export type ScoreEntry = {
+  _id: string;
+  playerName: string;
+  score: number;
+  stageReached: number;
+  createdAt: string;
+};
+
+// ── Site Settings ─────────────────────────────────────────────────────────────
+
 export type SiteSettings = {
   _id: string;
   _type: "siteSettings";

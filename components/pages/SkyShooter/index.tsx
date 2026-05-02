@@ -48,6 +48,7 @@ export default function SkyShooter() {
     return isNaN(stored) ? 0 : stored;
   });
   const [isNewBest, setIsNewBest] = useState(false);
+  const [medals, setMedals] = useState<string[]>([]);
 
   // ── Boot Phaser once ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -117,6 +118,7 @@ export default function SkyShooter() {
       setStageNum(p.stage);
       setPendingStars(p.stars);
       setUpgrades((prev) => ({ ...prev, stars: prev.stars + p.stars }));
+      setMedals((prev) => [...new Set([...prev, ...p.medals])]);
       setPhase("stage_complete");
     };
 
@@ -135,6 +137,7 @@ export default function SkyShooter() {
       setFinalScore(p.score);
       setFinalStage(p.stage);
       checkAndSaveBest(p.score);
+      setMedals((prev) => [...new Set([...prev, ...p.medals])]);
       setPhase("game_over");
       await saveAndFetchLeaderboard(p.score, p.stage);
     };
@@ -143,6 +146,7 @@ export default function SkyShooter() {
       setFinalScore(p.score);
       setFinalStage(3);
       checkAndSaveBest(p.score);
+      setMedals((prev) => [...new Set([...prev, ...p.medals])]);
       setPhase("victory");
       await saveAndFetchLeaderboard(p.score, 3);
     };
@@ -151,6 +155,7 @@ export default function SkyShooter() {
       setPhase("name_input");
       setStageNum(1);
       setUpgrades({ ...DEFAULT_UPGRADES });
+      setMedals([]);
     };
 
     EventBus.on(EV.SCORE_UPDATE, onScore);
@@ -198,6 +203,7 @@ export default function SkyShooter() {
     setPhase("name_input");
     setStageNum(1);
     setUpgrades({ ...DEFAULT_UPGRADES });
+    setMedals([]);
   }, []);
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -257,6 +263,15 @@ export default function SkyShooter() {
             <p className="sky-score-big">{fmt7(finalScore)}</p>
             {isNewBest && <p className="sky-new-best">★ NEW PERSONAL BEST ★</p>}
             <p className="sky-sub">FINAL SCORE</p>
+            {medals.length > 0 && (
+              <div className="sky-medals">
+                {medals.map((m) => (
+                  <span key={m} className="sky-medal">
+                    {m}
+                  </span>
+                ))}
+              </div>
+            )}
             {myRank !== null && myRank <= 10 && (
               <p className="sky-rank">🏆 RANK #{myRank} ON LEADERBOARD</p>
             )}
@@ -313,6 +328,7 @@ export default function SkyShooter() {
           upgrades={upgrades}
           pendingStars={pendingStars}
           score={finalScore}
+          medals={medals}
           onDone={handleUpgradeDone}
         />
       )}
@@ -326,6 +342,15 @@ export default function SkyShooter() {
             <p className="sky-score-big">{fmt7(finalScore)}</p>
             {isNewBest && <p className="sky-new-best">★ NEW PERSONAL BEST ★</p>}
             <p className="sky-sub">FINAL SCORE &nbsp;·&nbsp; STAGE {finalStage}</p>
+            {medals.length > 0 && (
+              <div className="sky-medals">
+                {medals.map((m) => (
+                  <span key={m} className="sky-medal">
+                    {m}
+                  </span>
+                ))}
+              </div>
+            )}
             {myRank !== null && myRank <= 10 && (
               <p className="sky-rank">🏆 RANK #{myRank} ON LEADERBOARD</p>
             )}
@@ -387,6 +412,7 @@ interface UpgradeProps {
   upgrades: Upgrades;
   pendingStars: number;
   score: number;
+  medals: string[];
   onDone: (u: Upgrades) => void;
 }
 
@@ -428,7 +454,7 @@ const UPGRADE_COSTS: Record<string, number[]> = {
   bombLevel: [0, 25, 45],
 };
 
-function UpgradeScreen({ stage, upgrades, pendingStars, score, onDone }: UpgradeProps) {
+function UpgradeScreen({ stage, upgrades, pendingStars, score, medals, onDone }: UpgradeProps) {
   const [u, setU] = useState<Upgrades>({ ...upgrades });
 
   const spentStars =
@@ -462,6 +488,15 @@ function UpgradeScreen({ stage, upgrades, pendingStars, score, onDone }: Upgrade
         <p className="sky-sub">
           SCORE SO FAR: <span style={{ color: "#e8ff00" }}>{fmt7(score)}</span>
         </p>
+        {medals.length > 0 && (
+          <div className="sky-medals">
+            {medals.map((m) => (
+              <span key={m} className="sky-medal">
+                {m}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="sky-sep" />
         <div className="sky-stars-avail">
           ★ <span style={{ color: "#e8ff00" }}>{remaining}</span> STARS AVAILABLE

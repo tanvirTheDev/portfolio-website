@@ -64,6 +64,7 @@ export class GameScene extends Phaser.Scene {
   bombsTxt!: Phaser.GameObjects.Text;
   waveBanner!: Phaser.GameObjects.Text;
   muteBtn!: Phaser.GameObjects.Text;
+  killsTxt!: Phaser.GameObjects.Text;
   comboTxt!: Phaser.GameObjects.Text;
   comboTxtTimer?: Phaser.Time.TimerEvent;
 
@@ -97,6 +98,11 @@ export class GameScene extends Phaser.Scene {
 
   // ── Wave perfect tracking ─────────────────────────────────────────────────────
   waveHitCount = 0; // life-damage hits taken this wave (0 = perfect)
+
+  // ── Stage stats (for medals) ──────────────────────────────────────────────────
+  stageKills = 0; // regular enemy kills this stage
+  stageHits = 0; // life-damage hits taken this stage
+  maxCombo = 0; // highest combo chain this stage
 
   constructor() {
     super({ key: "GameScene" });
@@ -232,6 +238,11 @@ export class GameScene extends Phaser.Scene {
       .setDepth(20)
       .setScrollFactor(0)
       .setAlpha(0.85);
+    this.killsTxt = this.add
+      .text(16, 78, "", mono(9, "#888888"))
+      .setDepth(20)
+      .setScrollFactor(0)
+      .setAlpha(0.55);
     this.scoreTxt = this.add
       .text(W / 2, 36, "0000000", mono(16, "#e8ff00"))
       .setDepth(20)
@@ -430,6 +441,8 @@ export class GameScene extends Phaser.Scene {
       }
       this.lastKillTime = now;
 
+      if (this.comboCount > this.maxCombo) this.maxCombo = this.comboCount;
+
       let pts = enemy.points;
       if (this.comboCount >= 2) {
         pts = Math.floor(pts * this.comboCount);
@@ -439,6 +452,7 @@ export class GameScene extends Phaser.Scene {
       this.updateComboHUD();
       // ─────────────────────────────────────────────────────────────
 
+      this.stageKills++;
       this.starsCollected += enemy.starDrop;
       this.score += pts;
       this.explode(enemy.x, enemy.y, 20, ENEMY_TINTS[enemy.eType]);
@@ -585,9 +599,11 @@ export class GameScene extends Phaser.Scene {
     const result = this.player.hit();
     if (result === "dead") {
       this.waveHitCount++;
+      this.stageHits++;
       this.triggerGameOver();
     } else if (result === "life") {
       this.waveHitCount++;
+      this.stageHits++;
       this.explode(this.player.x, this.player.y, 14, 0xff4444);
     }
     // "shield" result: shielded hit doesn't break the perfect streak
@@ -676,15 +692,17 @@ export class GameScene extends Phaser.Scene {
   private onStageComplete() {
     this.active = false;
     soundManager.stopBgm();
+    const medals = this.computeMedals();
     if (this.currentStage >= 3) {
       soundManager.victory();
-      EventBus.emit(EV.GAME_WIN, { score: this.score });
+      EventBus.emit(EV.GAME_WIN, { score: this.score, medals: [...medals, "ACE PILOT"] });
     } else {
       soundManager.stageComplete();
       EventBus.emit(EV.STAGE_COMPLETE, {
         stage: this.currentStage,
         stars: this.starsCollected,
         totalScore: this.score,
+        medals,
       });
     }
   }
@@ -693,11 +711,17 @@ export class GameScene extends Phaser.Scene {
     this.active = false;
     soundManager.stopBgm();
     soundManager.gameOver();
+    // Death explosion
+    this.explode(this.player.x, this.player.y, 45, 0xff4444);
+    this.cameras.main.shake(500, 0.025);
+    this.cameras.main.flash(200, 255, 60, 60);
     this.player.setVisible(false);
+    const medals = this.computeMedals();
     this.time.delayedCall(800, () => {
       EventBus.emit(EV.GAME_OVER, {
         score: this.score,
         stage: this.currentStage,
+        medals,
       });
     });
   }
@@ -755,6 +779,9 @@ export class GameScene extends Phaser.Scene {
       this.comboCount = 0;
       this.lastKillTime = 0;
       this.waveHitCount = 0;
+      this.stageKills = 0;
+      this.stageHits = 0;
+      this.maxCombo = 0;
       this.gamePaused = false;
       this.comboTxtTimer?.remove();
       this.comboTxt.setVisible(false).setAlpha(0);
@@ -780,6 +807,9 @@ export class GameScene extends Phaser.Scene {
       this.comboCount = 0;
       this.lastKillTime = 0;
       this.waveHitCount = 0;
+      this.stageKills = 0;
+      this.stageHits = 0;
+      this.maxCombo = 0;
       this.gamePaused = false;
       this.comboTxtTimer?.remove();
       this.comboTxt.setVisible(false).setAlpha(0);
@@ -851,6 +881,9 @@ export class GameScene extends Phaser.Scene {
     this.starsTxt.setText(`★ ${String(this.starsCollected).padStart(3, "0")}`);
     const b = this.player?.bombs ?? 0;
     this.bombsTxt.setText(b > 0 ? `✕ BOMB ×${b}` : "");
+    this.killsTxt.setText(
+      this.stageKills > 0 ? `KILLS ${String(this.stageKills).padStart(2, "0")}` : ""
+    );
   }
 
   // ── Resize ────────────────────────────────────────────────────────────────────
@@ -1089,6 +1122,15 @@ export class GameScene extends Phaser.Scene {
     this.player.setVisible(false).setAlpha(1);
     this.clearAllEnemies();
     EventBus.emit(EV.QUIT_TO_MENU);
+  }
+
+  // ── Medal computation ─────────────────────────────────────────────────────────
+  private computeMedals(): string[] {
+    const medals: string[] = [];
+    if (this.stageHits === 0) medals.push("UNTOUCHABLE");
+    if (this.maxCombo >= 5) medals.push("COMBO MASTER");
+    if (this.stageKills >= 20) medals.push("EXTERMINATOR");
+    return medals;
   }
 
   // ── Cleanup ───────────────────────────────────────────────────────────────────

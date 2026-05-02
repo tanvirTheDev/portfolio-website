@@ -1,15 +1,18 @@
 import Phaser from "phaser";
 import { Player } from "../entities/Player";
+import { Enemy } from "../entities/Enemy";
+import { Boss } from "../entities/Boss";
 import { EventBus, EV, DEFAULT_UPGRADES } from "../EventBus";
 import type { StartPayload, Upgrades } from "../EventBus";
+import { getWave, getWaveCount } from "../StageManager";
 
-const SCROLL_SPEED = 60; // background scroll speed px/s
+const SCROLL_SPEED = 60; // px/s for background parallax
 
 export class GameScene extends Phaser.Scene {
-  // Player
+  // ── Core objects ─────────────────────────────────────────────────────────────
   player!: Player;
 
-  // Input
+  // ── Input ─────────────────────────────────────────────────────────────────────
   cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   wasd!: {
     up: Phaser.Input.Keyboard.Key;
@@ -20,160 +23,143 @@ export class GameScene extends Phaser.Scene {
   fireKey!: Phaser.Input.Keyboard.Key;
   bombKey!: Phaser.Input.Keyboard.Key;
 
-  // Bullet pools
+  // ── Bullet pools ──────────────────────────────────────────────────────────────
   playerBullets!: Phaser.Physics.Arcade.Group;
   enemyBullets!: Phaser.Physics.Arcade.Group;
 
-  // Background layers
-  bgFar!: Phaser.GameObjects.TileSprite;
-  bgNear!: Phaser.GameObjects.TileSprite;
-  bgNebula!: Phaser.GameObjects.TileSprite;
+  // ── Enemy pools ───────────────────────────────────────────────────────────────
+  enemies!: Phaser.Physics.Arcade.Group;
+  bossGroup!: Phaser.Physics.Arcade.Group;
+  pickups!: Phaser.Physics.Arcade.Group;
+  boss: Boss | null = null;
 
-  // HUD
+  // ── Background layers ─────────────────────────────────────────────────────────
+  bgFar!: Phaser.GameObjects.TileSprite;
+  bgNebula!: Phaser.GameObjects.TileSprite;
+  bgNear!: Phaser.GameObjects.TileSprite;
+
+  // ── HUD ───────────────────────────────────────────────────────────────────────
   scoreTxt!: Phaser.GameObjects.Text;
   livesTxt!: Phaser.GameObjects.Text;
   starsTxt!: Phaser.GameObjects.Text;
   waveTxt!: Phaser.GameObjects.Text;
   stageTxt!: Phaser.GameObjects.Text;
   bombsTxt!: Phaser.GameObjects.Text;
+  waveBanner!: Phaser.GameObjects.Text;
 
-  // Game state
+  // ── Particles ─────────────────────────────────────────────────────────────────
+  explosionEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
+
+  // ── Game state ────────────────────────────────────────────────────────────────
   playerName = "GHOST";
   currentStage = 1;
   currentWave = 0;
   score = 0;
   starsCollected = 0;
   upgrades: Upgrades = { ...DEFAULT_UPGRADES };
-  active = false; // false until START_GAME received
-
-  // Explosion particle emitter
-  explosionEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
+  active = false;
+  pendingSpawns = 0;
+  waveClearFired = false;
 
   constructor() {
     super({ key: "GameScene" });
   }
 
-  // ── Lifecycle ───────────────────────────────────────────────────────────────
+  // ── Lifecycle ─────────────────────────────────────────────────────────────────
   create() {
     const { width: W, height: H } = this.scale;
 
     this.createBackground(W, H);
-    this.createBulletPools();
+    this.createPools();
     this.createPlayer(W, H);
-    this.createHUD();
+    this.createHUD(W, H);
     this.createExplosionEmitter();
     this.setupInput();
-    this.setupSounds();
+    this.setupColliders();
     this.setupEventBus();
-
-    // Resize handler
     this.scale.on("resize", this.onResize, this);
 
-    // Tell React the scene is ready
     EventBus.emit(EV.SCENE_READY, this);
   }
 
   update(time: number, delta: number) {
     if (!this.active) return;
 
-    const W = this.scale.width;
-    const H = this.scale.height;
+    const { width: W, height: H } = this.scale;
 
     this.scrollBackground(delta);
-    this.handlePlayerInput(time);
+    this.handleInput(time);
     this.player.update();
+    this.updateEnemies(time, delta, W, H);
     this.cleanBullets(W, H);
+    this.cleanPickups(H);
     this.updateHUD();
+    this.checkWaveCleared();
   }
 
-  // ── Background ──────────────────────────────────────────────────────────────
+  // ── Background ────────────────────────────────────────────────────────────────
   private createBackground(W: number, H: number) {
-    // Layer 1 — distant stars (slowest)
     this.bgFar = this.add
       .tileSprite(0, 0, W, H, "bg_stars_far")
-      .setOrigin(0, 0)
+      .setOrigin(0)
       .setDepth(0)
       .setAlpha(0.7);
-
-    // Layer 2 — nebula clouds (medium)
     this.bgNebula = this.add
       .tileSprite(0, 0, W, H, "bg_nebula")
-      .setOrigin(0, 0)
+      .setOrigin(0)
       .setDepth(1)
       .setAlpha(0.35);
-
-    // Layer 3 — near stars (fastest)
     this.bgNear = this.add
       .tileSprite(0, 0, W, H, "bg_stars_near")
-      .setOrigin(0, 0)
+      .setOrigin(0)
       .setDepth(2)
       .setAlpha(0.9);
 
-    // Subtle grid lines drawn on a graphics object
-    const grid = this.add.graphics().setDepth(3).setAlpha(0.07);
+    const grid = this.add.graphics().setDepth(3).setAlpha(0.06);
     const sz = 64;
     grid.lineStyle(1, 0xf2f0e9, 1);
-    for (let x = 0; x < W; x += sz) {
-      grid.lineBetween(x, 0, x, H);
-    }
-    for (let y = 0; y < H; y += sz) {
-      grid.lineBetween(0, y, W, y);
-    }
+    for (let x = 0; x < W; x += sz) grid.lineBetween(x, 0, x, H);
+    for (let y = 0; y < H; y += sz) grid.lineBetween(0, y, W, y);
   }
 
   private scrollBackground(delta: number) {
     const dt = delta / 1000;
     this.bgFar.tilePositionY -= SCROLL_SPEED * 0.3 * dt;
     this.bgNebula.tilePositionY -= SCROLL_SPEED * 0.55 * dt;
-    this.bgNear.tilePositionY -= SCROLL_SPEED * dt;
+    this.bgNear.tilePositionY -= SCROLL_SPEED * 1.0 * dt;
   }
 
-  // ── Bullets ─────────────────────────────────────────────────────────────────
-  private createBulletPools() {
-    const makePool = (texture: string) =>
+  // ── Pools ──────────────────────────────────────────────────────────────────────
+  private createPools() {
+    const makeBulletPool = (key: string) =>
       this.physics.add.group({
-        defaultKey: texture,
-        maxSize: 40,
+        defaultKey: key,
+        maxSize: 60,
         createCallback: (b) => {
-          const sprite = b as Phaser.Physics.Arcade.Sprite;
-          (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+          const spr = b as Phaser.Physics.Arcade.Sprite;
+          if (spr.body) {
+            (spr.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+          }
         },
       });
 
-    this.playerBullets = makePool("bullet_p");
-    this.enemyBullets = makePool("bullet_e");
+    this.playerBullets = makeBulletPool("bullet_p");
+    this.enemyBullets = makeBulletPool("bullet_e");
+    this.enemies = this.physics.add.group();
+    this.bossGroup = this.physics.add.group();
+    this.pickups = this.physics.add.group({ maxSize: 50 });
   }
 
-  private cleanBullets(W: number, H: number) {
-    // Recycle bullets that leave the screen
-    const recycle = (group: Phaser.Physics.Arcade.Group) => {
-      group.getChildren().forEach((b) => {
-        const s = b as Phaser.Physics.Arcade.Sprite;
-        if (!s.active) return;
-        if (s.y < -40 || s.y > H + 40 || s.x < -40 || s.x > W + 40) {
-          s.setActive(false).setVisible(false);
-          (s.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
-        }
-      });
-    };
-    recycle(this.playerBullets);
-    recycle(this.enemyBullets);
-  }
-
-  // ── Player ──────────────────────────────────────────────────────────────────
+  // ── Player ────────────────────────────────────────────────────────────────────
   private createPlayer(W: number, H: number) {
     this.player = new Player(this, W / 2, H - 80);
     this.player.applyUpgrades(this.upgrades);
-    this.player.setVisible(false); // hidden until game starts
+    this.player.setVisible(false);
   }
 
-  // ── HUD ─────────────────────────────────────────────────────────────────────
-  private createHUD() {
-    const style = (
-      size: number,
-      color = "#f2f0e9",
-      _alpha = 0.7
-    ): Phaser.Types.GameObjects.Text.TextStyle => ({
+  // ── HUD ───────────────────────────────────────────────────────────────────────
+  private createHUD(W: number, H: number) {
+    const mono = (size: number, color = "#f2f0e9"): Phaser.Types.GameObjects.Text.TextStyle => ({
       fontFamily: '"JetBrains Mono", monospace',
       fontSize: `${size}px`,
       color,
@@ -181,71 +167,77 @@ export class GameScene extends Phaser.Scene {
       strokeThickness: 3,
     });
 
-    const W = this.scale.width;
-
     this.stageTxt = this.add
-      .text(16, 36, "STAGE 1", style(9, "#e8ff00"))
+      .text(16, 36, "STAGE 1", mono(9, "#e8ff00"))
       .setDepth(20)
       .setScrollFactor(0)
-      .setAlpha(0.6);
+      .setAlpha(0.65);
     this.waveTxt = this.add
-      .text(16, 50, "WAVE 00", style(9))
+      .text(16, 50, "WAVE 00", mono(9))
       .setDepth(20)
       .setScrollFactor(0)
       .setAlpha(0.55);
+    this.bombsTxt = this.add
+      .text(16, 64, "", mono(9, "#ff4444"))
+      .setDepth(20)
+      .setScrollFactor(0)
+      .setAlpha(0.85);
     this.scoreTxt = this.add
-      .text(W / 2, 36, "0000000", style(16, "#e8ff00"))
+      .text(W / 2, 36, "0000000", mono(16, "#e8ff00"))
       .setDepth(20)
       .setScrollFactor(0)
       .setOrigin(0.5, 0);
     this.livesTxt = this.add
-      .text(W - 16, 36, "▶▶▶", style(12, "#f2f0e9"))
+      .text(W - 16, 36, "▶▶▶", mono(12, "#f2f0e9"))
       .setDepth(20)
       .setScrollFactor(0)
       .setOrigin(1, 0);
     this.starsTxt = this.add
-      .text(W - 16, 54, "★ 000", style(9, "#e8ff00"))
+      .text(W - 16, 54, "★ 000", mono(9, "#e8ff00"))
       .setDepth(20)
       .setScrollFactor(0)
       .setOrigin(1, 0)
-      .setAlpha(0.7);
-    this.bombsTxt = this.add
-      .text(16, 64, "", style(9, "#ff4444"))
-      .setDepth(20)
-      .setScrollFactor(0)
-      .setAlpha(0.8);
-
-    // Top border
+      .setAlpha(0.75);
     this.add
       .graphics()
       .setDepth(19)
       .setScrollFactor(0)
-      .lineStyle(1, 0x222222, 1)
+      .lineStyle(1, 0x1e1e1e, 1)
       .lineBetween(0, 30, W, 30);
+
+    // Wave banner (center flash)
+    this.waveBanner = this.add
+      .text(W / 2, H / 2 - 40, "", mono(18, "#e8ff00"))
+      .setDepth(30)
+      .setScrollFactor(0)
+      .setOrigin(0.5)
+      .setAlpha(0)
+      .setVisible(false);
   }
 
-  // ── Particles ───────────────────────────────────────────────────────────────
+  // ── Particles ─────────────────────────────────────────────────────────────────
   private createExplosionEmitter() {
     this.explosionEmitter = this.add
       .particles(0, 0, "particle", {
-        lifespan: 500,
-        speed: { min: 80, max: 220 },
-        scale: { start: 1.2, end: 0 },
+        lifespan: 520,
+        speed: { min: 70, max: 230 },
+        scale: { start: 1.3, end: 0 },
         alpha: { start: 1, end: 0 },
         tint: [0xe8ff00, 0xff8800, 0xff4444, 0xffffff],
         blendMode: "ADD",
-        frequency: -1, // manual emit
+        frequency: -1,
       })
       .setDepth(15);
   }
 
   explode(x: number, y: number, count = 18, tint?: number) {
-    if (tint) this.explosionEmitter.setParticleTint(tint);
+    if (tint !== undefined) this.explosionEmitter.setParticleTint(tint);
+    else this.explosionEmitter.setParticleTint(0xe8ff00);
     this.explosionEmitter.emitParticleAt(x, y, count);
-    this.cameras.main.shake(120, 0.006);
+    this.cameras.main.shake(110, 0.005);
   }
 
-  // ── Input ───────────────────────────────────────────────────────────────────
+  // ── Input ──────────────────────────────────────────────────────────────────────
   private setupInput() {
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.wasd = {
@@ -257,7 +249,7 @@ export class GameScene extends Phaser.Scene {
     this.fireKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.bombKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.X);
 
-    // Touch / mobile drag to move
+    // Touch: drag to move, tap to fire
     this.input.on("pointermove", (ptr: Phaser.Input.Pointer) => {
       if (!this.active || !ptr.isDown) return;
       this.player.setX(Phaser.Math.Clamp(ptr.x, 24, this.scale.width - 24));
@@ -267,7 +259,7 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private handlePlayerInput(time: number) {
+  private handleInput(time: number) {
     const { left, right, up, down } = this.cursors;
     const { left: a, right: d, up: w, down: s } = this.wasd;
 
@@ -277,8 +269,6 @@ export class GameScene extends Phaser.Scene {
     if (right.isDown || d.isDown) dx = 1;
     if (up.isDown || w.isDown) dy = -1;
     if (down.isDown || s.isDown) dy = 1;
-
-    // Normalise diagonal
     if (dx !== 0 && dy !== 0) {
       dx *= 0.707;
       dy *= 0.707;
@@ -288,94 +278,245 @@ export class GameScene extends Phaser.Scene {
 
     if (this.fireKey.isDown) this.player.fire(this.playerBullets, time);
 
-    if (Phaser.Input.Keyboard.JustDown(this.bombKey)) this.player.dropBomb(this);
-  }
-
-  // ── Sounds (stub — assets generated or skipped if missing) ──────────────────
-  private setupSounds() {
-    // Sounds are generated via Web Audio in EventBus listeners if desired.
-    // We guard with try/catch in case a key doesn't exist yet.
-    if (!this.cache.audio.exists("sfx_shoot")) {
-      // Create silent placeholder — replaced with real audio later
-      this.sound.add("sfx_shoot", { volume: 0 });
+    if (Phaser.Input.Keyboard.JustDown(this.bombKey)) {
+      if (this.player.dropBomb(this)) this.doBomb();
     }
   }
 
-  // ── Event Bus ───────────────────────────────────────────────────────────────
-  private setupEventBus() {
-    EventBus.on(EV.START_GAME, (payload: StartPayload) => {
-      this.playerName = payload.playerName;
-      this.upgrades = { ...payload.upgrades };
-      this.score = 0;
-      this.starsCollected = 0;
-      this.currentStage = 1;
-      this.currentWave = 0;
-      this.active = true;
+  // ── Colliders ─────────────────────────────────────────────────────────────────
+  private setupColliders() {
+    // Player bullets → enemies
+    this.physics.add.overlap(this.playerBullets, this.enemies, (b, e) =>
+      this.onBulletHitEnemy(b as Phaser.Physics.Arcade.Sprite, e as Enemy)
+    );
 
-      this.player.applyUpgrades(this.upgrades);
-      this.player.lives = 3;
-      this.player.score = 0;
-      this.player.stars = 0;
-      this.player.setPosition(this.scale.width / 2, this.scale.height - 80);
-      this.player.setVisible(true).setActive(true).setAlpha(1);
+    // Player bullets → boss
+    this.physics.add.overlap(this.playerBullets, this.bossGroup, (b, bo) =>
+      this.onBulletHitBoss(b as Phaser.Physics.Arcade.Sprite, bo as Boss)
+    );
 
-      // Spawn wave 1 (enemies added in Step 3)
-      this.startWave(1);
+    // Enemy bullets → player
+    this.physics.add.overlap(this.enemyBullets, this.player, (b) =>
+      this.onEnemyBulletHitPlayer(b as Phaser.Physics.Arcade.Sprite)
+    );
+
+    // Kamikaze body → player
+    this.physics.add.overlap(this.enemies, this.player, (_e, _p) => {
+      const enemy = _e as Enemy;
+      if (!enemy.active) return;
+      // Only kamikaze and carrier deal body damage
+      if (enemy.eType === "kamikaze" || enemy.eType === "carrier") {
+        enemy.setActive(false).setVisible(false);
+        this.onPlayerHit();
+      }
     });
 
-    EventBus.on(EV.RESUME_STAGE, (payload: { upgrades: Upgrades }) => {
-      this.upgrades = { ...payload.upgrades };
-      this.player.applyUpgrades(payload.upgrades);
-      this.active = true;
-      this.startWave(this.currentWave + 1);
+    // Pickups → player
+    this.physics.add.overlap(this.pickups, this.player, (pk) => {
+      const p = pk as Phaser.Physics.Arcade.Sprite;
+      if (!p.active) return;
+      p.setActive(false).setVisible(false);
+      this.starsCollected += 1;
+      this.broadcastScore();
     });
   }
 
-  // ── Wave / Stage management (stubs, filled in Step 3) ───────────────────────
+  // ── Collision callbacks ───────────────────────────────────────────────────────
+  private onBulletHitEnemy(bullet: Phaser.Physics.Arcade.Sprite, enemy: Enemy) {
+    if (!bullet.active || !enemy.active) return;
+    this.killBullet(bullet);
+    if (enemy.takeDamage(1)) {
+      this.starsCollected += enemy.starDrop;
+      this.score += enemy.points;
+      this.explode(enemy.x, enemy.y, 20);
+      this.spawnPickup(enemy.x, enemy.y, enemy.starDrop);
+      enemy.setActive(false).setVisible(false);
+      this.broadcastScore();
+    }
+  }
+
+  private onBulletHitBoss(bullet: Phaser.Physics.Arcade.Sprite, bossObj: Boss) {
+    if (!bullet.active || !bossObj.active || !this.boss) return;
+    this.killBullet(bullet);
+    if (this.boss.takeDamage(1)) {
+      this.onBossKilled();
+    }
+  }
+
+  private onEnemyBulletHitPlayer(bullet: Phaser.Physics.Arcade.Sprite) {
+    if (!bullet.active) return;
+    this.killBullet(bullet);
+    this.onPlayerHit();
+  }
+
+  // ── Enemy management ──────────────────────────────────────────────────────────
+  private updateEnemies(time: number, delta: number, W: number, H: number) {
+    const px = this.player.x;
+    const py = this.player.y;
+
+    (this.enemies.getChildren() as Enemy[]).forEach((e) => {
+      if (!e.active) return;
+      e.tick(time, delta, px, py, W, H, this.enemyBullets);
+    });
+
+    if (this.boss?.active) {
+      this.boss.tick(time, delta, px, py, W, H, this.enemyBullets);
+    }
+  }
+
+  // ── Wave spawning ─────────────────────────────────────────────────────────────
   startWave(wave: number) {
     this.currentWave = wave;
+    this.waveClearFired = false;
     this.updateHUD();
-    // Enemy spawning logic added in Step 3
+
+    const waveData = getWave(this.currentStage, wave);
+    if (!waveData) {
+      // Shouldn't happen; safety fall-through to stage complete
+      this.onStageComplete();
+      return;
+    }
+
+    if (waveData.kind === "boss") {
+      this.showBanner("⚠ BOSS INCOMING ⚠", "#ff4444");
+      this.time.delayedCall(1200, () => this.spawnBoss());
+    } else {
+      const label = wave === 1 ? `STAGE ${this.currentStage} — BEGIN` : `WAVE ${wave}`;
+      this.showBanner(label, "#e8ff00");
+      this.time.delayedCall(700, () => {
+        if (!this.active) return;
+        this.spawnWave(waveData.specs, waveData.interval);
+      });
+    }
   }
 
-  /** Call when all enemies in a wave are defeated */
-  onWaveCleared() {
-    const wavesPerStage: Record<number, number> = { 1: 4, 2: 6, 3: 8 };
-    const maxWaves = wavesPerStage[this.currentStage] ?? 4;
+  private spawnWave(specs: import("../StageManager").SpawnSpec[], interval: number) {
+    const W = this.scale.width;
+    const H = this.scale.height;
+    let delay = 0;
 
+    for (const spec of specs) {
+      const hSpacing = Math.min(60, (W * 0.75) / spec.cols);
+      const vSpacing = 52;
+      const startX = W / 2 - ((spec.cols - 1) / 2) * hSpacing;
+      const formY = H * spec.formY;
+
+      for (let i = 0; i < spec.count; i++) {
+        const col = i % spec.cols;
+        const row = Math.floor(i / spec.cols);
+        const ex = startX + col * hSpacing;
+        const ef = formY + row * vSpacing;
+        const hpM = spec.hpMult ?? 1;
+
+        this.pendingSpawns++;
+        this.time.delayedCall(delay, () => {
+          if (!this.active) {
+            this.pendingSpawns--;
+            return;
+          }
+          const e = new Enemy(this, ex, -60 - row * 30, spec.type, hpM);
+          e.formY = ef;
+          this.enemies.add(e);
+          this.pendingSpawns--;
+        });
+        delay += interval;
+      }
+    }
+  }
+
+  private spawnBoss() {
+    if (!this.active) return;
+    const W = this.scale.width;
+    const stg = Math.min(this.currentStage, 3) as 1 | 2 | 3;
+    this.boss = new Boss(this, W / 2, -100, stg);
+    this.bossGroup.add(this.boss);
+  }
+
+  // ── Bomb ──────────────────────────────────────────────────────────────────────
+  private doBomb() {
+    // Kill all active regular enemies
+    (this.enemies.getChildren() as Enemy[]).forEach((e) => {
+      if (!e.active) return;
+      this.explode(e.x, e.y, 10);
+      this.score += Math.floor(e.points * 0.5);
+      e.setActive(false).setVisible(false);
+    });
+
+    // Heavy damage to boss
+    if (this.boss?.active) {
+      if (this.boss.takeDamage(8)) this.onBossKilled();
+    }
+
+    // Clear enemy bullets
+    (this.enemyBullets.getChildren() as Phaser.Physics.Arcade.Sprite[]).forEach((b) => {
+      if (b.active) this.killBullet(b);
+    });
+
+    this.cameras.main.flash(220, 255, 255, 120);
+    this.broadcastScore();
+  }
+
+  // ── Player hit ────────────────────────────────────────────────────────────────
+  onPlayerHit() {
+    if (!this.active) return;
+    const result = this.player.hit();
+    if (result === "dead") {
+      this.triggerGameOver();
+    } else if (result === "life") {
+      this.explode(this.player.x, this.player.y, 14, 0xff4444);
+    }
+    this.broadcastScore();
+  }
+
+  // ── Wave clear ────────────────────────────────────────────────────────────────
+  private checkWaveCleared() {
+    if (!this.active || this.waveClearFired) return;
+    if (this.boss) return; // boss wave; handled in onBossKilled
+
+    const alive = (this.enemies.getChildren() as Enemy[]).filter((e) => e.active).length;
+    if (alive === 0 && this.pendingSpawns === 0) {
+      this.waveClearFired = true;
+      this.time.delayedCall(900, () => {
+        if (this.active) this.onWaveCleared();
+      });
+    }
+  }
+
+  private onWaveCleared() {
+    const maxWaves = getWaveCount(this.currentStage);
     if (this.currentWave < maxWaves) {
-      this.time.delayedCall(1200, () => this.startWave(this.currentWave + 1));
+      this.startWave(this.currentWave + 1);
     } else {
       this.onStageComplete();
     }
   }
 
-  private onStageComplete() {
-    this.active = false;
-    EventBus.emit(EV.STAGE_COMPLETE, {
-      stage: this.currentStage,
-      stars: this.starsCollected,
-      totalScore: this.score,
+  private onBossKilled() {
+    const bossScore = [0, 2000, 3500, 5500][this.currentStage] ?? 2000;
+    this.score += bossScore;
+    this.explode(this.boss!.x, this.boss!.y, 45, 0xff4444);
+    this.cameras.main.shake(700, 0.022);
+    this.cameras.main.flash(180, 255, 200, 60);
+    this.boss!.destroy();
+    this.boss = null;
+    this.bossGroup.clear(false, false);
+    this.broadcastScore();
+    this.time.delayedCall(1600, () => {
+      if (this.active) this.onStageComplete();
     });
   }
 
-  /** Call from enemy collision handlers */
-  onEnemyKilled(x: number, y: number, points: number, starDrop: number) {
-    this.score += points;
-    this.starsCollected += starDrop;
-    this.explode(x, y, 18);
-    this.broadcastScore();
-  }
-
-  /** Call when player is hit */
-  onPlayerHit() {
-    const result = this.player.hit();
-    if (result === "dead") {
-      this.triggerGameOver();
-    } else if (result === "life") {
-      this.explode(this.player.x, this.player.y, 12, 0xff4444);
+  private onStageComplete() {
+    this.active = false;
+    if (this.currentStage >= 3) {
+      EventBus.emit(EV.GAME_WIN, { score: this.score });
+    } else {
+      EventBus.emit(EV.STAGE_COMPLETE, {
+        stage: this.currentStage,
+        stars: this.starsCollected,
+        totalScore: this.score,
+      });
     }
-    this.broadcastScore();
   }
 
   triggerGameOver() {
@@ -389,6 +530,116 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  // ── Pickups ───────────────────────────────────────────────────────────────────
+  private spawnPickup(x: number, y: number, count: number) {
+    for (let i = 0; i < count; i++) {
+      const px = this.pickups.get(
+        x + Phaser.Math.Between(-12, 12),
+        y,
+        "pickup_star"
+      ) as Phaser.Physics.Arcade.Sprite | null;
+      if (!px) continue;
+      px.setActive(true).setVisible(true).setDepth(5);
+      (px.body as Phaser.Physics.Arcade.Body).setVelocity(
+        Phaser.Math.Between(-45, 45),
+        Phaser.Math.Between(50, 90)
+      );
+    }
+  }
+
+  // ── Bullet recycling ─────────────────────────────────────────────────────────
+  private killBullet(b: Phaser.Physics.Arcade.Sprite) {
+    b.setActive(false).setVisible(false);
+    (b.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
+  }
+
+  private cleanBullets(W: number, H: number) {
+    const recycle = (g: Phaser.Physics.Arcade.Group) =>
+      (g.getChildren() as Phaser.Physics.Arcade.Sprite[]).forEach((b) => {
+        if (!b.active) return;
+        if (b.y < -50 || b.y > H + 50 || b.x < -50 || b.x > W + 50) this.killBullet(b);
+      });
+    recycle(this.playerBullets);
+    recycle(this.enemyBullets);
+  }
+
+  private cleanPickups(H: number) {
+    (this.pickups.getChildren() as Phaser.Physics.Arcade.Sprite[]).forEach((p) => {
+      if (p.active && p.y > H + 40) {
+        p.setActive(false).setVisible(false);
+      }
+    });
+  }
+
+  // ── EventBus ──────────────────────────────────────────────────────────────────
+  private setupEventBus() {
+    EventBus.on(EV.START_GAME, (payload: StartPayload) => {
+      this.playerName = payload.playerName;
+      this.upgrades = { ...payload.upgrades };
+      this.score = 0;
+      this.starsCollected = 0;
+      this.currentStage = 1;
+      this.currentWave = 0;
+      this.active = true;
+
+      this.clearAllEnemies();
+      this.player.applyUpgrades(this.upgrades);
+      this.player.lives = 3;
+      this.player.score = 0;
+      this.player.stars = 0;
+      this.player.setPosition(this.scale.width / 2, this.scale.height - 80);
+      this.player.setVisible(true).setActive(true).setAlpha(1);
+
+      this.startWave(1);
+    });
+
+    EventBus.on(EV.RESUME_STAGE, (payload: { upgrades: Upgrades; stage: number }) => {
+      this.upgrades = { ...payload.upgrades };
+      this.currentStage = payload.stage;
+      this.currentWave = 0;
+      this.starsCollected = 0;
+      this.active = true;
+
+      this.clearAllEnemies();
+      this.player.applyUpgrades(payload.upgrades);
+      this.player.setVisible(true).setActive(true).setAlpha(1);
+
+      this.startWave(1);
+    });
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────────
+  private clearAllEnemies() {
+    (this.enemies.getChildren() as Enemy[]).forEach((e) => {
+      if (e.active) e.setActive(false).setVisible(false);
+    });
+    if (this.boss) {
+      this.boss.destroy();
+      this.boss = null;
+    }
+    this.bossGroup.clear(false, false);
+    (this.enemyBullets.getChildren() as Phaser.Physics.Arcade.Sprite[]).forEach((b) => {
+      if (b.active) this.killBullet(b);
+    });
+    this.pendingSpawns = 0;
+    this.waveClearFired = false;
+  }
+
+  private showBanner(text: string, color = "#e8ff00") {
+    this.waveBanner.setText(text).setColor(color).setVisible(true).setAlpha(0);
+
+    this.tweens.add({
+      targets: this.waveBanner,
+      alpha: { from: 0, to: 1 },
+      duration: 320,
+      yoyo: true,
+      hold: 900,
+      onComplete: () => {
+        this.waveBanner.setVisible(false);
+      },
+    });
+  }
+
   private broadcastScore() {
     EventBus.emit(EV.SCORE_UPDATE, {
       score: this.score,
@@ -398,41 +649,33 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  // ── HUD update ───────────────────────────────────────────────────────────────
+  // ── HUD update ────────────────────────────────────────────────────────────────
   private updateHUD() {
-    if (!this.scoreTxt) return;
     this.scoreTxt.setText(String(this.score).padStart(7, "0"));
     this.waveTxt.setText(`WAVE ${String(this.currentWave).padStart(2, "0")}`);
     this.stageTxt.setText(`STAGE ${this.currentStage}`);
-    this.livesTxt.setText(
-      "▶".repeat(Math.max(0, this.player?.lives ?? 3)) +
-        "◻".repeat(Math.max(0, 3 - (this.player?.lives ?? 3)))
-    );
+    const l = this.player?.lives ?? 0;
+    this.livesTxt.setText("▶".repeat(Math.max(0, l)) + "◻".repeat(Math.max(0, 3 - l)));
     this.starsTxt.setText(`★ ${String(this.starsCollected).padStart(3, "0")}`);
-    const bombs = this.player?.bombs ?? 0;
-    this.bombsTxt.setText(bombs > 0 ? `✕ BOMB ×${bombs}` : "");
+    const b = this.player?.bombs ?? 0;
+    this.bombsTxt.setText(b > 0 ? `✕ BOMB ×${b}` : "");
   }
 
-  // ── Resize ───────────────────────────────────────────────────────────────────
-  private onResize(gameSize: Phaser.Structs.Size) {
-    const W = gameSize.width;
-    const H = gameSize.height;
-
+  // ── Resize ────────────────────────────────────────────────────────────────────
+  private onResize(gs: Phaser.Structs.Size) {
+    const W = gs.width;
+    const H = gs.height;
     this.bgFar.setSize(W, H);
     this.bgNebula.setSize(W, H);
     this.bgNear.setSize(W, H);
-
-    if (this.player) {
-      this.player.setY(Math.min(this.player.y, H - 60));
-    }
-
-    // Reposition HUD right-aligned elements
+    if (this.player) this.player.setY(Math.min(this.player.y, H - 60));
     this.scoreTxt?.setX(W / 2);
     this.livesTxt?.setX(W - 16);
     this.starsTxt?.setX(W - 16);
+    this.waveBanner?.setPosition(W / 2, H / 2 - 40);
   }
 
-  // ── Cleanup ──────────────────────────────────────────────────────────────────
+  // ── Cleanup ───────────────────────────────────────────────────────────────────
   shutdown() {
     EventBus.off(EV.START_GAME);
     EventBus.off(EV.RESUME_STAGE);

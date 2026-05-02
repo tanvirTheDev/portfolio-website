@@ -78,6 +78,7 @@ export type SiteSettings = {
   tagline?: string;
   email?: string;
   availability?: Availability;
+  introVideoUrl?: string;
   githubUrl?: string;
   linkedinUrl?: string;
   mediumUsername?: string;

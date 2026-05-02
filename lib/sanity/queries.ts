@@ -23,6 +23,7 @@ const SITE_SETTINGS_QUERY = groq`
     _id, _type,
     name, tagline, email,
     availability { available, label },
+    introVideoUrl,
     githubUrl, linkedinUrl, mediumUsername,
     resumeFile { asset -> { url } }
   }

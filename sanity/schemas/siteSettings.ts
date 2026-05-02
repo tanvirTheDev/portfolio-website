@@ -54,6 +54,14 @@ export const siteSettings = defineType({
       group: "identity",
     }),
     defineField({
+      name: "introVideoUrl",
+      title: "Intro Video URL",
+      type: "url",
+      group: "links",
+      description:
+        "YouTube link for your intro video (e.g. https://youtu.be/abc123). The video section appears on the homepage only when this field is filled in.",
+    }),
+    defineField({
       name: "githubUrl",
       title: "GitHub URL",
       type: "url",

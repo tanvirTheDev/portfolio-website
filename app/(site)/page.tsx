@@ -1,10 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getSiteSettings, getAllProjects } from "@/lib/sanity/queries";
+import {
+  getSiteSettings,
+  getAllProjects,
+  getAllExperience,
+  getAllCertificates,
+} from "@/lib/sanity/queries";
+import { getMediumPosts } from "@/lib/medium";
 import BuildStamp from "@/components/ui/BuildStamp";
 import KineticTitleLoader from "@/components/physics/KineticTitleLoader";
 
-export const metadata: Metadata = { title: "Index" };
+export const metadata: Metadata = {
+  title: "Tanvir Ahmed — Full-Stack Developer",
+  description:
+    "Portfolio of Tanvir Ahmed — full-stack developer specialising in React, Next.js, Node.js, and scalable web products.",
+  openGraph: {
+    title: "Tanvir Ahmed — Full-Stack Developer",
+    description:
+      "Portfolio of Tanvir Ahmed — full-stack developer specialising in React, Next.js, Node.js, and scalable web products.",
+    type: "website",
+  },
+};
 
 /** Extract YouTube video ID from any common URL format */
 function getYouTubeId(url: string): string | null {
@@ -19,26 +35,76 @@ function getYouTubeId(url: string): string | null {
   return null;
 }
 
-const DIR_PAGES = [
-  { href: "/work", label: "WORK", idx: "002", desc: "Projects" },
-  { href: "/experience", label: "EXPERIENCE", idx: "003", desc: "Timeline" },
-  { href: "/certificates", label: "CERTIFICATES", idx: "004", desc: "Credentials" },
-  { href: "/blog", label: "BLOG", idx: "005", desc: "Writing" },
-  { href: "/contact", label: "CONTACT", idx: "006", desc: "Get in touch" },
-  { href: "/play", label: "PLAY", idx: "007", desc: "Space Shooter" },
-] as const;
-
 export default async function HomePage() {
-  const [settings, projects] = await Promise.all([
+  const [settings, projects, experience, certs] = await Promise.all([
     getSiteSettings().catch(() => null),
     getAllProjects().catch(() => []),
+    getAllExperience().catch(() => []),
+    getAllCertificates().catch(() => []),
   ]);
+
+  // Fetch blog count only when username is configured (cached anyway)
+  const blogPosts = settings?.mediumUsername
+    ? await getMediumPosts(settings.mediumUsername).catch(() => [])
+    : [];
+  const blogCount = blogPosts.length;
 
   const availability = settings?.availability;
   const videoId = settings?.introVideoUrl ? getYouTubeId(settings.introVideoUrl) : null;
   const isAvailable = availability?.available ?? false;
   const availLabel =
     availability?.label?.trim() || (isAvailable ? "AVAILABLE FOR WORK" : "CURRENTLY ENGAGED");
+
+  const DIR_PAGES = [
+    {
+      href: "/work",
+      label: "WORK",
+      idx: "002",
+      entries: `${projects.length} entries`,
+      type: "PROJECTS",
+      desc: "Full-stack builds",
+    },
+    {
+      href: "/experience",
+      label: "EXPERIENCE",
+      idx: "003",
+      entries: experience.length ? `${experience.length} entries` : "—",
+      type: "TIMELINE",
+      desc: "Work history",
+    },
+    {
+      href: "/certificates",
+      label: "CERTIFICATES",
+      idx: "004",
+      entries: certs.length ? `${certs.length} entries` : "—",
+      type: "CREDENTIALS",
+      desc: "Verified certs",
+    },
+    {
+      href: "/blog",
+      label: "BLOG",
+      idx: "005",
+      entries: blogCount ? `${blogCount} entries` : "—",
+      type: "WRITING",
+      desc: "Technical posts",
+    },
+    {
+      href: "/contact",
+      label: "CONTACT",
+      idx: "006",
+      entries: "—",
+      type: "CONTACT",
+      desc: "Get in touch",
+    },
+    {
+      href: "/play",
+      label: "PLAY",
+      idx: "007",
+      entries: "1 entry",
+      type: "GAME",
+      desc: "Sky Shooter",
+    },
+  ] as const;
 
   return (
     <div>
@@ -48,12 +114,41 @@ export default async function HomePage() {
       {/* ── AVAILABILITY BADGE ── */}
       {availability && (
         <div className="avail-wrap" data-reveal="">
-          <span className="avail-badge" data-available={isAvailable ? "true" : "false"}>
-            <span className="avail-dot" aria-hidden />
-            <span>STATUS · {availLabel}</span>
-          </span>
+          <Link href="/contact" style={{ textDecoration: "none" }}>
+            <span className="avail-badge" data-available={isAvailable ? "true" : "false"}>
+              <span className="avail-dot" aria-hidden />
+              <span>STATUS · {availLabel}</span>
+            </span>
+          </Link>
         </div>
       )}
+
+      {/* ── HERO STRIP — role + CTA ── */}
+      <div className="home-hero" data-reveal="">
+        <div className="home-hero__text">
+          <p className="home-hero__role">
+            {settings?.tagline ?? "FULL-STACK DEVELOPER · REACT · NODE.JS · TYPESCRIPT"}
+          </p>
+          {settings?.resumeFile?.asset?.url && (
+            <a
+              href={settings.resumeFile.asset.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="home-hero__resume"
+            >
+              ↓ DOWNLOAD RÉSUMÉ
+            </a>
+          )}
+        </div>
+        <div className="home-hero__actions">
+          <Link href="/work" className="btn btn-solid">
+            VIEW WORK
+          </Link>
+          <Link href="/contact" className="btn">
+            GET IN TOUCH
+          </Link>
+        </div>
+      </div>
 
       {/* ── INTRO VIDEO — only renders when Sanity URL is set ── */}
       {videoId && (
@@ -86,28 +181,7 @@ export default async function HomePage() {
         <span>DESC</span>
       </div>
 
-      {/* Work row shows live project count */}
-      <Link
-        href="/work"
-        className="dir-row"
-        style={{
-          textDecoration: "none",
-          color: "inherit",
-          display: "grid",
-          gridTemplateColumns: "56px 1fr 90px 110px 120px",
-          padding: "13px 48px",
-          borderBottom: "1px solid var(--border)",
-          transition: "background 0.12s",
-        }}
-      >
-        <span className="di">002</span>
-        <span className="dn">/WORK</span>
-        <span className="ds">{projects.length} entries</span>
-        <span className="ds">PROJECTS</span>
-        <span className="dd">Full-stack builds</span>
-      </Link>
-
-      {DIR_PAGES.slice(1).map(({ href, label, idx, desc }) => (
+      {DIR_PAGES.map(({ href, label, idx, entries, type, desc }) => (
         <Link
           key={href}
           href={href}
@@ -124,8 +198,8 @@ export default async function HomePage() {
         >
           <span className="di">{idx}</span>
           <span className="dn">/{label}</span>
-          <span className="ds">—</span>
-          <span className="ds">{label}</span>
+          <span className="ds">{entries}</span>
+          <span className="ds">{type}</span>
           <span className="dd">{desc}</span>
         </Link>
       ))}

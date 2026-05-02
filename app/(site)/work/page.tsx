@@ -3,7 +3,17 @@ import { getAllProjects } from "@/lib/sanity/queries";
 import WorkList from "@/components/pages/WorkList";
 import KineticTitleLoader from "@/components/physics/KineticTitleLoader";
 
-export const metadata: Metadata = { title: "Work" };
+export const metadata: Metadata = {
+  title: "Work — Tanvir Ahmed",
+  description:
+    "Full-stack projects — web apps, APIs, and tools built with React, Next.js, Node.js, and more.",
+  openGraph: {
+    title: "Work — Tanvir Ahmed",
+    description:
+      "Full-stack projects — web apps, APIs, and tools built with React, Next.js, Node.js, and more.",
+    type: "website",
+  },
+};
 
 export default async function WorkPage() {
   const projects = await getAllProjects();

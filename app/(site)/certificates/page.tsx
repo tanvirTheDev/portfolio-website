@@ -3,7 +3,17 @@ import { getAllCertificates } from "@/lib/sanity/queries";
 import CertificatesGrid from "@/components/pages/CertificatesGrid";
 import KineticTitleLoader from "@/components/physics/KineticTitleLoader";
 
-export const metadata: Metadata = { title: "Certificates" };
+export const metadata: Metadata = {
+  title: "Certificates — Tanvir Ahmed",
+  description:
+    "Verified professional certifications in web development, cloud computing, and computer science.",
+  openGraph: {
+    title: "Certificates — Tanvir Ahmed",
+    description:
+      "Verified professional certifications in web development, cloud computing, and computer science.",
+    type: "website",
+  },
+};
 
 export default async function CertificatesPage() {
   const certs = await getAllCertificates();

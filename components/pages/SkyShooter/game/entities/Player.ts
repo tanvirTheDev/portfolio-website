@@ -131,6 +131,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     return true;
   }
 
+  // ── Mid-game power-up gifts ──────────────────────────────────────────────────
+  giveShield(n = 1) {
+    this.shieldHp = Math.min(3, this.shieldHp + n);
+    this.updateShieldVisual();
+  }
+
+  giveBomb(n = 1) {
+    this.bombs = Math.min(2, this.bombs + n);
+  }
+
   // ── Damage ──────────────────────────────────────────────────────────────────
   hit(): "shield" | "life" | "dead" {
     if (this.invincible) return "shield"; // absorbed by invincibility

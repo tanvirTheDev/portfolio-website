@@ -1588,6 +1588,22 @@ svg {
   height: 100% !important;
 }
 
+/* CRT scanlines — subtle horizontal lines over the canvas */
+.sky-canvas::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.07) 3px,
+    rgba(0, 0, 0, 0.07) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
 /* ── Overlays ── */
 .sky-overlay {
   position: absolute;
@@ -1676,6 +1692,35 @@ svg {
   color: #e8ff00;
   text-transform: uppercase;
   margin: 0;
+}
+
+/* ── New personal best badge ── */
+@keyframes sky-pulse-gold {
+  0%,
+  100% {
+    opacity: 1;
+    letter-spacing: 0.25em;
+  }
+  50% {
+    opacity: 0.7;
+    letter-spacing: 0.35em;
+  }
+}
+.sky-new-best {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #e8ff00;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  margin: 0;
+  animation: sky-pulse-gold 1.1s ease-in-out infinite;
+}
+
+/* ── Personal best on start screen ── */
+.sky-hint--best {
+  color: #888;
+  letter-spacing: 0.2em;
 }
 
 /* ── Score big display ── */

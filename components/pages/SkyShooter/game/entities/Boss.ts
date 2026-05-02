@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { soundManager } from "../SoundManager";
 
 const HP_BY_STAGE = [0, 30, 50, 80] as const;
 const PTS_BY_STAGE = [0, 2000, 3500, 5500] as const;
@@ -158,7 +159,9 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
 
     if (this.phase === 1 && pct <= 0.6) {
       this.phase = 2;
+      soundManager.bossPhaseChange();
       this.scene.cameras.main.shake(320, 0.016);
+      this.scene.cameras.main.flash(120, 255, 100, 30);
       this.setTint(0xff4400);
       this.scene.time.delayedCall(500, () => {
         if (this.active) this.clearTint();
@@ -166,7 +169,9 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     }
     if (this.phase === 2 && this.stageNum >= 3 && pct <= 0.3) {
       this.phase = 3;
+      soundManager.bossPhaseChange();
       this.scene.cameras.main.shake(420, 0.022);
+      this.scene.cameras.main.flash(180, 255, 60, 30);
       this.setTint(0xff0000);
       this.scene.time.delayedCall(600, () => {
         if (this.active) this.clearTint();
@@ -193,6 +198,13 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     g.fillRect(bx - 1, by - 1, barW + 2, barH + 2);
     g.fillStyle(col, 1);
     g.fillRect(bx, by, Math.round(barW * pct), barH);
+
+    // Phase threshold markers
+    g.fillStyle(0xffffff, 0.35);
+    g.fillRect(bx + Math.round(barW * 0.6) - 1, by - 2, 2, barH + 4);
+    if (this.stageNum >= 3) {
+      g.fillRect(bx + Math.round(barW * 0.3) - 1, by - 2, 2, barH + 4);
+    }
 
     this.hpLabel.setPosition(bx, by + barH + 4);
   }

@@ -124,6 +124,12 @@ class SoundManager {
     this.osc(880, "sine", 0.13, 0.07, 1320);
   }
 
+  pickupPowerup() {
+    // Distinct double-rising tone — clearly better than a star
+    this.osc(660, "sine", 0.09, 0.07, 990);
+    this.osc(880, "sine", 0.09, 0.05, 1320, 0.05);
+  }
+
   bomb() {
     this.noise(0.55, 0.32, [900, 45]);
     this.osc(48, "sine", 0.55, 0.18, 24);

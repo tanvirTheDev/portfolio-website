@@ -2,7 +2,6 @@
 
 import { useActionState, useState, useEffect, useRef } from "react";
 import { sendMessage, type ContactState } from "@/app/(site)/contact/actions";
-import { useAudio } from "@/lib/audio";
 import { gtagEvent } from "@/lib/gtag";
 
 const MAX = 500;
@@ -11,7 +10,6 @@ const INITIAL: ContactState = { status: "idle" };
 export default function ContactForm() {
   const [state, action, pending] = useActionState(sendMessage, INITIAL);
   const [charCount, setCharCount] = useState(0);
-  const { clack } = useAudio();
   const trackedResult = useRef<string | null>(null);
 
   const ts = new Date().toISOString().replace("T", " ").slice(0, 19) + "Z";
@@ -35,8 +33,8 @@ export default function ContactForm() {
   }, [state.status, state.error]);
 
   function handleSubmitClick() {
-    clack();
     // Track every time someone hits TRANSMIT (whether they succeed or not)
+    // clack() is handled globally by GlobalClickSound
     gtagEvent("contact_form_submit_attempt", {
       event_category: "Contact",
       event_label: "Transmit button clicked",

@@ -6,6 +6,7 @@ import SideNav from "@/components/shell/SideNav";
 import Cursor from "@/components/shell/Cursor";
 import KeyboardNav from "@/components/shell/KeyboardNav";
 import BootSequence from "@/components/shell/BootSequence";
+import GlobalClickSound from "@/components/shell/GlobalClickSound";
 import MotionProvider from "@/components/motion/MotionProvider";
 import PageTransition from "@/components/motion/PageTransition";
 import RevealObserver from "@/components/motion/RevealObserver";
@@ -44,6 +45,9 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
 
       {/* Scroll-reveal watcher — re-runs on every navigation */}
       <RevealObserver />
+
+      {/* Global click sound — fires clack() on every a/button click */}
+      <GlobalClickSound />
 
       {/* Page content with enter animation.
           Suspense boundary required because framer-motion's AnimatePresence

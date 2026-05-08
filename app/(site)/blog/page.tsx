@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   keywords: ["blog", "technical writing", "React", "Next.js", "Node.js", "system design"],
   alternates: { canonical: `${SITE_URL}/blog` },
   openGraph: {
-    title: "Blog — Tanvir Ahmed",
+    title: "Blog — Tanvir Ahamed",
     description:
       "Technical articles on full-stack development, React, Next.js, Node.js, and system design.",
     type: "website",

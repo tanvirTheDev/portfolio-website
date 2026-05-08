@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   keywords: ["certificates", "certifications", "credentials", "web development", "cloud"],
   alternates: { canonical: `${SITE_URL}/certificates` },
   openGraph: {
-    title: "Certificates — Tanvir Ahmed",
+    title: "Certificates — Tanvir Ahamed",
     description:
       "Verified professional certifications in web development, cloud computing, and computer science.",
     type: "website",

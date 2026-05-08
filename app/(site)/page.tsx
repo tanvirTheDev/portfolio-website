@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     absolute: "Tanvir Ahamed — Full-Stack Developer",
   },
   description:
-    "Portfolio of Tanvir Ahamed (also known as Tanvir Ahmed, tanvirthedev, Tanvir the Dev) — full-stack developer specialising in React, Next.js, Node.js, and scalable web products.",
+    "Portfolio of Tanvir Ahamed — full-stack developer specialising in React, Next.js, Node.js, and scalable web products. Known online as tanvirthedev.",
   alternates: { canonical: SITE_URL },
   openGraph: {
     title: "Tanvir Ahamed — Full-Stack Developer",
@@ -118,7 +118,7 @@ export default async function HomePage() {
     "@context": "https://schema.org",
     "@type": "Person",
     name: settings?.name ?? "Tanvir Ahamed",
-    alternateName: ["Tanvir Ahmed", "tanvirthedev", "Tanvir the Dev", "tanvir ahamed developer"],
+    alternateName: ["tanvirthedev", "Tanvir the Dev", "tanvir ahamed developer"],
     url: SITE_URL,
     jobTitle: settings?.tagline ?? "Full-Stack Developer",
     description:

@@ -9,10 +9,9 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "About Tanvir Ahamed (Tanvir Ahmed) — full-stack developer known as tanvirthedev. Background, skills, and professional story.",
+    "About Tanvir Ahamed — full-stack developer known as tanvirthedev. Background, skills, and professional story.",
   keywords: [
     "Tanvir Ahamed",
-    "Tanvir Ahmed",
     "tanvirthedev",
     "tanvir the dev",
     "tanvir ahamed developer",
@@ -26,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "About Tanvir Ahamed — Full-Stack Developer",
     description:
-      "About Tanvir Ahamed (Tanvir Ahmed), full-stack developer known as tanvirthedev. React, Next.js, Node.js specialist available for freelance work.",
+      "About Tanvir Ahamed — full-stack developer known as tanvirthedev. React, Next.js, Node.js specialist available for freelance work.",
     type: "profile",
     url: `${SITE_URL}/about`,
   },
@@ -43,12 +42,12 @@ export default async function AboutPage() {
     "@context": "https://schema.org",
     "@type": "Person",
     name: name,
-    alternateName: ["Tanvir Ahmed", "tanvirthedev", "Tanvir the Dev", "tanvir ahamed developer"],
+    alternateName: ["tanvirthedev", "Tanvir the Dev", "tanvir ahamed developer"],
     url: SITE_URL,
     sameUrl: `${SITE_URL}/about`,
     jobTitle: tagline,
     description:
-      "Tanvir Ahamed (also known as Tanvir Ahmed and tanvirthedev) is a full-stack developer specialising in React, Next.js, Node.js, and TypeScript. Available for freelance work on Upwork.",
+      "Tanvir Ahamed is a full-stack developer specialising in React, Next.js, Node.js, and TypeScript. Known online as tanvirthedev. Available for freelance work on Upwork.",
     knowsAbout: [
       "React",
       "Next.js",
@@ -105,9 +104,7 @@ export default async function AboutPage() {
           <div className="about-identity-text">
             <h1 className="about-name">{name}</h1>
             <p className="about-aka">
-              Also known as <span className="about-alias">Tanvir Ahmed</span>
-              {" · "}
-              <span className="about-alias">tanvirthedev</span>
+              Also known as <span className="about-alias">tanvirthedev</span>
               {" · "}
               <span className="about-alias">Tanvir the Dev</span>
             </p>
@@ -120,10 +117,9 @@ export default async function AboutPage() {
           <div className="about-sec-label">BIOGRAPHY</div>
           <div className="about-bio">
             <p>
-              <strong>Tanvir Ahamed</strong> (spelled Tanvir Ahmed in some records) is a full-stack
-              developer and freelancer, widely known online as <strong>tanvirthedev</strong> or{" "}
-              <strong>Tanvir the Dev</strong>. He builds production-grade web applications using
-              React, Next.js, Node.js, and TypeScript.
+              <strong>Tanvir Ahamed</strong> is a full-stack developer and freelancer, widely known
+              online as <strong>tanvirthedev</strong> or <strong>Tanvir the Dev</strong>. He builds
+              production-grade web applications using React, Next.js, Node.js, and TypeScript.
             </p>
             <p>
               Tanvir Ahamed specialises in turning complex requirements into clean, scalable code.
@@ -168,9 +164,8 @@ export default async function AboutPage() {
         <div className="about-section" data-reveal="">
           <div className="about-sec-label">FIND TANVIR AHAMED ONLINE</div>
           <p className="about-find-note">
-            Searching for <em>Tanvir Ahamed</em>, <em>Tanvir Ahmed</em>, <em>tanvirthedev</em>, or{" "}
-            <em>Tanvir the Dev</em>? You&apos;ve found the right place. Here are all official
-            profiles:
+            Searching for <em>Tanvir Ahamed</em> or <em>tanvirthedev</em>? You&apos;ve found the
+            right place. Here are all official profiles:
           </p>
           <div className="about-links">
             {settings?.upworkUrl && (

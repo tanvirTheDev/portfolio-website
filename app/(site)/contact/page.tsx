@@ -21,13 +21,13 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Get in touch with Tanvir Ahmed for freelance work, full-time roles, or project collaborations.",
+    "Get in touch with Tanvir Ahamed for freelance work, full-time roles, or project collaborations.",
   keywords: ["contact", "hire", "freelance", "full-stack developer", "collaboration"],
   alternates: { canonical: `${SITE_URL}/contact` },
   openGraph: {
-    title: "Contact — Tanvir Ahmed",
+    title: "Contact — Tanvir Ahamed",
     description:
-      "Get in touch with Tanvir Ahmed for freelance work, full-time roles, or project collaborations.",
+      "Get in touch with Tanvir Ahamed for freelance work, full-time roles, or project collaborations.",
     type: "website",
     url: `${SITE_URL}/contact`,
   },
@@ -40,6 +40,7 @@ export default async function ContactPage() {
   const videoId = settings?.introVideoUrl ? getYouTubeId(settings.introVideoUrl) : null;
 
   const strip = (u: string) => u.replace(/^https?:\/\/(www\.)?/, "");
+  // Only show the core professional contact channels — keeps it clean
   const links: SocialLink[] = [];
   if (settings?.email)
     links.push({ label: "EMAIL", href: `mailto:${settings.email}`, short: settings.email });
@@ -50,50 +51,6 @@ export default async function ContactPage() {
       label: "LINKEDIN",
       href: settings.linkedinUrl,
       short: strip(settings.linkedinUrl),
-    });
-  if (settings?.upworkUrl)
-    links.push({ label: "UPWORK", href: settings.upworkUrl, short: strip(settings.upworkUrl) });
-  if (settings?.mediumUsername)
-    links.push({
-      label: "MEDIUM",
-      href: `https://medium.com/@${settings.mediumUsername}`,
-      short: `medium.com/@${settings.mediumUsername}`,
-    });
-  if (settings?.twitterUrl)
-    links.push({
-      label: "TWITTER / X",
-      href: settings.twitterUrl,
-      short: strip(settings.twitterUrl),
-    });
-  if (settings?.facebookUrl)
-    links.push({
-      label: "FACEBOOK",
-      href: settings.facebookUrl,
-      short: strip(settings.facebookUrl),
-    });
-  if (settings?.facebookPageUrl)
-    links.push({
-      label: "FB PAGE",
-      href: settings.facebookPageUrl,
-      short: strip(settings.facebookPageUrl),
-    });
-  if (settings?.leetcodeUrl)
-    links.push({
-      label: "LEETCODE",
-      href: settings.leetcodeUrl,
-      short: strip(settings.leetcodeUrl),
-    });
-  if (settings?.codeforcesUrl)
-    links.push({
-      label: "CODEFORCES",
-      href: settings.codeforcesUrl,
-      short: strip(settings.codeforcesUrl),
-    });
-  if (settings?.devCommunityUrl)
-    links.push({
-      label: "DEV.TO",
-      href: settings.devCommunityUrl,
-      short: strip(settings.devCommunityUrl),
     });
 
   return (

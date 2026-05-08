@@ -14,14 +14,17 @@ import TrackedLink from "@/components/ui/TrackedLink";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export const metadata: Metadata = {
-  title: "Tanvir Ahmed — Full-Stack Developer",
+  // absolute prevents the layout template from appending "| Tanvir Ahamed" again
+  title: {
+    absolute: "Tanvir Ahamed — Full-Stack Developer",
+  },
   description:
-    "Portfolio of Tanvir Ahmed — full-stack developer specialising in React, Next.js, Node.js, and scalable web products.",
+    "Portfolio of Tanvir Ahamed (also known as Tanvir Ahmed, tanvirthedev, Tanvir the Dev) — full-stack developer specialising in React, Next.js, Node.js, and scalable web products.",
   alternates: { canonical: SITE_URL },
   openGraph: {
-    title: "Tanvir Ahmed — Full-Stack Developer",
+    title: "Tanvir Ahamed — Full-Stack Developer",
     description:
-      "Portfolio of Tanvir Ahmed — full-stack developer specialising in React, Next.js, Node.js, and scalable web products.",
+      "Portfolio of Tanvir Ahamed — full-stack developer specialising in React, Next.js, Node.js, and scalable web products.",
     type: "website",
     url: SITE_URL,
   },
@@ -111,19 +114,27 @@ export default async function HomePage() {
     },
   ] as const;
 
-  // JSON-LD Person schema — helps Google understand who this site is about
+  // JSON-LD Person schema — rich structured data for Google + AI crawlers
   const personSchema = {
     "@context": "https://schema.org",
     "@type": "Person",
-    name: settings?.name ?? "Tanvir Ahmed",
+    name: settings?.name ?? "Tanvir Ahamed",
+    alternateName: ["Tanvir Ahmed", "tanvirthedev", "Tanvir the Dev", "tanvir ahamed developer"],
     url: SITE_URL,
     jobTitle: settings?.tagline ?? "Full-Stack Developer",
+    description:
+      "Full-stack developer specialising in React, Next.js, Node.js, and TypeScript. Available for freelance work on Upwork. Known as tanvirthedev.",
+    ...(settings?.email && { email: `mailto:${settings.email}` }),
+    ...(settings?.profileImage?.asset?.url && { image: settings.profileImage.asset.url }),
     sameAs: [
       settings?.githubUrl,
       settings?.linkedinUrl,
+      settings?.upworkUrl ?? "https://www.upwork.com/freelancers/tanvirthedev",
       settings?.mediumUsername ? `https://medium.com/@${settings.mediumUsername}` : null,
+      settings?.twitterUrl,
+      settings?.leetcodeUrl,
+      settings?.devCommunityUrl,
     ].filter(Boolean),
-    ...(settings?.email && { email: `mailto:${settings.email}` }),
   };
 
   return (
@@ -149,8 +160,44 @@ export default async function HomePage() {
         </div>
       )}
 
-      {/* ── HERO STRIP — role + CTA ── */}
+      {/* ── HERO STRIP — photo + role + CTA ── */}
       <div className="home-hero" data-reveal="">
+        {/* Profile photo — left side */}
+        {settings?.profileImage?.asset?.url && (
+          <div className="hero-photo-wrap">
+            <div className="hero-photo-frame">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={settings.profileImage.asset.url}
+                alt={settings.name ?? "Tanvir Ahamed"}
+                className="hero-photo"
+              />
+              <div className="hero-photo-scan" aria-hidden />
+            </div>
+            {/* Upwork badge under photo */}
+            {settings?.upworkUrl && (
+              <TrackedLink
+                href={settings.upworkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="upwork-badge"
+                eventName="upwork_profile_click"
+                eventLabel="Hero — Upwork badge"
+                eventCategory="Engagement"
+              >
+                <span className="upwork-dot" aria-hidden />
+                <span className="upwork-label">UPWORK</span>
+                {settings.upworkJss != null && (
+                  <span className="upwork-jss">{settings.upworkJss}% JSS</span>
+                )}
+                {settings.upworkJobsCompleted != null && (
+                  <span className="upwork-jobs">{settings.upworkJobsCompleted} JOBS</span>
+                )}
+              </TrackedLink>
+            )}
+          </div>
+        )}
+
         <div className="home-hero__text">
           <p className="home-hero__role">
             {settings?.tagline ?? "FULL-STACK DEVELOPER · REACT · NODE.JS · TYPESCRIPT"}

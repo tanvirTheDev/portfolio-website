@@ -39,30 +39,61 @@ export default async function ContactPage() {
   const settings = await getSiteSettings().catch(() => null);
   const videoId = settings?.introVideoUrl ? getYouTubeId(settings.introVideoUrl) : null;
 
+  const strip = (u: string) => u.replace(/^https?:\/\/(www\.)?/, "");
   const links: SocialLink[] = [];
   if (settings?.email)
-    links.push({
-      label: "EMAIL",
-      href: `mailto:${settings.email}`,
-      short: settings.email,
-    });
+    links.push({ label: "EMAIL", href: `mailto:${settings.email}`, short: settings.email });
   if (settings?.githubUrl)
-    links.push({
-      label: "GITHUB",
-      href: settings.githubUrl,
-      short: settings.githubUrl.replace(/^https?:\/\/(www\.)?/, ""),
-    });
+    links.push({ label: "GITHUB", href: settings.githubUrl, short: strip(settings.githubUrl) });
   if (settings?.linkedinUrl)
     links.push({
       label: "LINKEDIN",
       href: settings.linkedinUrl,
-      short: settings.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ""),
+      short: strip(settings.linkedinUrl),
     });
+  if (settings?.upworkUrl)
+    links.push({ label: "UPWORK", href: settings.upworkUrl, short: strip(settings.upworkUrl) });
   if (settings?.mediumUsername)
     links.push({
       label: "MEDIUM",
       href: `https://medium.com/@${settings.mediumUsername}`,
       short: `medium.com/@${settings.mediumUsername}`,
+    });
+  if (settings?.twitterUrl)
+    links.push({
+      label: "TWITTER / X",
+      href: settings.twitterUrl,
+      short: strip(settings.twitterUrl),
+    });
+  if (settings?.facebookUrl)
+    links.push({
+      label: "FACEBOOK",
+      href: settings.facebookUrl,
+      short: strip(settings.facebookUrl),
+    });
+  if (settings?.facebookPageUrl)
+    links.push({
+      label: "FB PAGE",
+      href: settings.facebookPageUrl,
+      short: strip(settings.facebookPageUrl),
+    });
+  if (settings?.leetcodeUrl)
+    links.push({
+      label: "LEETCODE",
+      href: settings.leetcodeUrl,
+      short: strip(settings.leetcodeUrl),
+    });
+  if (settings?.codeforcesUrl)
+    links.push({
+      label: "CODEFORCES",
+      href: settings.codeforcesUrl,
+      short: strip(settings.codeforcesUrl),
+    });
+  if (settings?.devCommunityUrl)
+    links.push({
+      label: "DEV.TO",
+      href: settings.devCommunityUrl,
+      short: strip(settings.devCommunityUrl),
     });
 
   return (

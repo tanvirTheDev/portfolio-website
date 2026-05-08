@@ -90,9 +90,20 @@ export type SiteSettings = {
   tagline?: string;
   email?: string;
   availability?: Availability;
+  profileImage?: { asset: { url: string } };
+  upworkJss?: number;
+  upworkJobsCompleted?: number;
   introVideoUrl?: string;
   githubUrl?: string;
   linkedinUrl?: string;
+  upworkUrl?: string;
   mediumUsername?: string;
+  // Social & Platforms
+  twitterUrl?: string;
+  facebookUrl?: string;
+  facebookPageUrl?: string;
+  leetcodeUrl?: string;
+  codeforcesUrl?: string;
+  devCommunityUrl?: string;
   resumeFile?: { asset: { url: string } };
 };

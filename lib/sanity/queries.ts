@@ -23,8 +23,12 @@ const SITE_SETTINGS_QUERY = groq`
     _id, _type,
     name, tagline, email,
     availability { available, label },
+    profileImage { asset -> { url } },
+    upworkJss, upworkJobsCompleted,
     introVideoUrl,
-    githubUrl, linkedinUrl, mediumUsername,
+    githubUrl, linkedinUrl, upworkUrl, mediumUsername,
+    twitterUrl, facebookUrl, facebookPageUrl,
+    leetcodeUrl, codeforcesUrl, devCommunityUrl,
     resumeFile { asset -> { url } }
   }
 `;

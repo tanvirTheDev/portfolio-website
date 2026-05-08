@@ -1081,6 +1081,118 @@ svg {
 }
 
 /* ── HOME HERO STRIP ── */
+/* ── PROFILE PHOTO ── */
+@keyframes photo-border-pulse {
+  0%,
+  100% {
+    border-color: var(--border);
+  }
+  50% {
+    border-color: rgba(232, 255, 0, 0.5);
+  }
+}
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0.08;
+  }
+  100% {
+    transform: translateY(200%);
+    opacity: 0.08;
+  }
+}
+
+.hero-photo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.hero-photo-frame {
+  position: relative;
+  width: 96px;
+  height: 116px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  animation: photo-border-pulse 3s ease-in-out infinite;
+}
+.hero-photo-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(232, 255, 0, 0.06) 40%,
+    transparent 60%
+  );
+  z-index: 2;
+  pointer-events: none;
+  animation: scanline 3.5s linear infinite;
+}
+.hero-photo-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.15) 0%, transparent 50%);
+  z-index: 3;
+  pointer-events: none;
+}
+.hero-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  /* Brutalist aesthetic: grayscale + boosted contrast */
+  filter: grayscale(100%) contrast(1.15) brightness(0.88);
+  display: block;
+  transition: filter 0.4s ease;
+}
+.hero-photo-frame:hover .hero-photo {
+  /* Flash to color on hover */
+  filter: grayscale(0%) contrast(1.05) brightness(0.95);
+}
+
+/* ── UPWORK BADGE ── */
+.upwork-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  border: 1px solid rgba(232, 255, 0, 0.25);
+  text-decoration: none;
+  width: 96px;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.upwork-badge:hover {
+  border-color: var(--accent);
+  background: rgba(232, 255, 0, 0.05);
+}
+.upwork-dot {
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+  flex-shrink: 0;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+.upwork-label {
+  font-size: 7px;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  font-weight: 800;
+}
+.upwork-jss,
+.upwork-jobs {
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  opacity: 0.45;
+  width: 100%;
+}
+
 .home-hero {
   padding: 28px 48px 32px;
   border-bottom: 1px solid var(--border);
@@ -1727,6 +1839,17 @@ svg {
     padding: 24px 20px;
     flex-direction: column;
     align-items: flex-start;
+  }
+  .hero-photo-wrap {
+    flex-direction: row;
+    align-items: center;
+  }
+  .hero-photo-frame {
+    width: 72px;
+    height: 86px;
+  }
+  .upwork-badge {
+    width: auto;
   }
   .home-hero__actions {
     width: 100%;

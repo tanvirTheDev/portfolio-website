@@ -83,6 +83,15 @@ export type ScoreEntry = {
 
 // ── Site Settings ─────────────────────────────────────────────────────────────
 
+export type IntroMeta = {
+  title?: string;
+  channel?: string;
+  duration?: string;
+  recordedAt?: string;
+  location?: string;
+  transmissionId?: string;
+};
+
 export type SiteSettings = {
   _id: string;
   _type: "siteSettings";
@@ -93,7 +102,10 @@ export type SiteSettings = {
   profileImage?: { asset: { url: string } };
   upworkJss?: number;
   upworkJobsCompleted?: number;
+  upworkEarnings?: string;
+  skills?: string[];
   introVideoUrl?: string;
+  introMeta?: IntroMeta;
   githubUrl?: string;
   linkedinUrl?: string;
   upworkUrl?: string;

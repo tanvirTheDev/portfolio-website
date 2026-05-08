@@ -9,7 +9,9 @@ import {
 import { getMediumPosts } from "@/lib/medium";
 import BuildStamp from "@/components/ui/BuildStamp";
 import KineticTitleLoader from "@/components/physics/KineticTitleLoader";
-import TrackedLink from "@/components/ui/TrackedLink";
+import HeroStatus from "@/components/home/HeroStatus";
+import BroadcastFrame from "@/components/home/BroadcastFrame";
+import SkillsTicker from "@/components/home/SkillsTicker";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -51,7 +53,7 @@ export default async function HomePage() {
     getAllCertificates().catch(() => []),
   ]);
 
-  // Fetch blog count only when username is configured (cached anyway)
+  // Fetch blog count only when username is configured
   const blogPosts = settings?.mediumUsername
     ? await getMediumPosts(settings.mediumUsername).catch(() => [])
     : [];
@@ -63,62 +65,51 @@ export default async function HomePage() {
   const availLabel =
     availability?.label?.trim() || (isAvailable ? "AVAILABLE FOR WORK" : "CURRENTLY ENGAGED");
 
+  // Upwork stats
+  const upworkSuccess = settings?.upworkJss != null ? `${settings.upworkJss}%` : undefined;
+
   const DIR_PAGES = [
     {
       href: "/work",
       label: "WORK",
       idx: "002",
-      entries: `${projects.length} entries`,
-      type: "PROJECTS",
-      desc: "Full-stack builds",
+      desc: `${projects.length} ENTRIES`,
     },
     {
       href: "/experience",
       label: "EXPERIENCE",
       idx: "003",
-      entries: experience.length ? `${experience.length} entries` : "—",
-      type: "TIMELINE",
-      desc: "Work history",
+      desc: experience.length ? `${experience.length} ROLES` : "—",
     },
     {
       href: "/certificates",
       label: "CERTIFICATES",
       idx: "004",
-      entries: certs.length ? `${certs.length} entries` : "—",
-      type: "CREDENTIALS",
-      desc: "Verified certs",
+      desc: certs.length ? `${certs.length} CREDENTIALS` : "—",
     },
     {
       href: "/blog",
       label: "BLOG",
       idx: "005",
-      entries: blogCount ? `${blogCount} entries` : "—",
-      type: "WRITING",
-      desc: "Technical posts",
+      desc: blogCount ? `${blogCount} POSTS` : "LIVE RSS FEED",
     },
     {
       href: "/contact",
       label: "CONTACT",
       idx: "006",
-      entries: "—",
-      type: "CONTACT",
-      desc: "Get in touch",
+      desc: "ENCRYPTED CHANNEL",
     },
     {
       href: "/about",
       label: "ABOUT",
       idx: "007",
-      entries: "1 entry",
-      type: "BIO",
-      desc: "Who is Tanvir",
+      desc: "1 ENTRY",
     },
     {
       href: "/play",
       label: "PLAY",
       idx: "008",
-      entries: "1 entry",
-      type: "GAME",
-      desc: "Sky Shooter",
+      desc: "SKY SHOOTER",
     },
   ] as const;
 
@@ -146,169 +137,99 @@ export default async function HomePage() {
   };
 
   return (
-    <div>
+    <div className="home-v2">
       {/* ── JSON-LD structured data ── */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
       />
 
-      {/* ── PHYSICS STAGE ── */}
+      {/* ── PHYSICS TITLE ── */}
       <KineticTitleLoader text={settings?.name ?? "PORTFOLIO"} />
 
-      {/* ── AVAILABILITY BADGE ── */}
-      {availability && (
-        <div className="avail-wrap" data-reveal="">
-          <Link href="/contact" style={{ textDecoration: "none" }}>
-            <span className="avail-badge" data-available={isAvailable ? "true" : "false"}>
-              <span className="avail-dot" aria-hidden />
-              <span>STATUS · {availLabel}</span>
+      {/* ── HERO STATUS BAR ── */}
+      <HeroStatus
+        availableText={availLabel}
+        isAvailable={isAvailable}
+        role={settings?.tagline ?? "FULL-STACK DEVELOPER"}
+        resumeUrl={settings?.resumeFile?.asset?.url}
+      />
+
+      {/* ── BROADCAST FRAME ── */}
+      <BroadcastFrame
+        transmissionId={settings?.introMeta?.transmissionId ?? "TX-0001"}
+        channel={settings?.introMeta?.channel ?? "TANVIR_DEV"}
+        duration={settings?.introMeta?.duration ?? "01:30"}
+        recordedAt={settings?.introMeta?.recordedAt}
+        location={settings?.introMeta?.location ?? "REMOTE / DHAKA"}
+        youtubeId={videoId ?? undefined}
+        videoTitle={
+          settings?.introMeta?.title ??
+          `WHO IS ${(settings?.name ?? "TANVIR AHAMED").toUpperCase()}`
+        }
+        profileImageUrl={settings?.profileImage?.asset?.url}
+        name={settings?.name ?? "TANVIR AHAMED"}
+        role={settings?.tagline ?? "FULL-STACK DEVELOPER"}
+        upworkSuccess={upworkSuccess}
+        upworkJobs={settings?.upworkJobsCompleted}
+        upworkEarnings={settings?.upworkEarnings}
+      />
+
+      {/* ── SKILLS TICKER ── */}
+      <SkillsTicker skills={settings?.skills} />
+
+      {/* ── DIRECTORY SECTION ── */}
+      <div className="dir-section">
+        <div className="dir-section-hdr">
+          <div>
+            <span className="slabel" style={{ margin: 0 }}>
+              01 / DIRECTORY
+            </span>
+            <div className="dir-section-title">PORTFOLIO_INDEX</div>
+          </div>
+          <div className="dir-section-meta">
+            v1.0.0 · CHK_7F3A9C
+            <br />
+            COMPILED — <BuildStamp />
+            <br />
+            OWNER {settings?.email ?? "tanvir@portfolio.dev"}
+          </div>
+        </div>
+
+        <div className="dir-head">
+          <span>IDX</span>
+          <span>PATH</span>
+          <span>SIZE</span>
+          <span>NOTES</span>
+          <span>→</span>
+        </div>
+
+        {DIR_PAGES.map(({ href, label, idx, desc }) => (
+          <Link
+            key={href}
+            href={href}
+            className="dir-row"
+            style={{
+              textDecoration: "none",
+              color: "inherit",
+            }}
+          >
+            <span className="di">{idx}</span>
+            <span className="dn">/{label}</span>
+            <span className="ds">—</span>
+            <span className="dd">{desc}</span>
+            <span
+              className="ds"
+              style={{ textAlign: "right", color: "var(--accent)", opacity: 0.7 }}
+            >
+              ↗
             </span>
           </Link>
-        </div>
-      )}
-
-      {/* ── HERO STRIP — photo + role + CTA ── */}
-      <div className="home-hero" data-reveal="">
-        {/* Profile photo — left side */}
-        {settings?.profileImage?.asset?.url && (
-          <div className="hero-photo-wrap">
-            <div className="hero-photo-frame">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={settings.profileImage.asset.url}
-                alt={settings.name ?? "Tanvir Ahamed"}
-                className="hero-photo"
-              />
-              <div className="hero-photo-scan" aria-hidden />
-            </div>
-            {/* Upwork badge under photo */}
-            {settings?.upworkUrl && (
-              <TrackedLink
-                href={settings.upworkUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="upwork-badge"
-                eventName="upwork_profile_click"
-                eventLabel="Hero — Upwork badge"
-                eventCategory="Engagement"
-              >
-                <span className="upwork-dot" aria-hidden />
-                <span className="upwork-label">UPWORK</span>
-                {settings.upworkJss != null && (
-                  <span className="upwork-jss">{settings.upworkJss}% JSS</span>
-                )}
-                {settings.upworkJobsCompleted != null && (
-                  <span className="upwork-jobs">{settings.upworkJobsCompleted} JOBS</span>
-                )}
-              </TrackedLink>
-            )}
-          </div>
-        )}
-
-        <div className="home-hero__text">
-          <p className="home-hero__role">
-            {settings?.tagline ?? "FULL-STACK DEVELOPER · REACT · NODE.JS · TYPESCRIPT"}
-          </p>
-          {settings?.resumeFile?.asset?.url && (
-            <TrackedLink
-              href={settings.resumeFile.asset.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="home-hero__resume"
-              eventName="resume_download"
-              eventLabel="Hero — Download Résumé"
-              eventCategory="Engagement"
-            >
-              ↓ DOWNLOAD RÉSUMÉ
-            </TrackedLink>
-          )}
-        </div>
-        <div className="home-hero__actions">
-          <Link href="/work" className="btn btn-solid">
-            VIEW WORK
-          </Link>
-          <Link href="/contact" className="btn">
-            GET IN TOUCH
-          </Link>
-          {videoId && (
-            <TrackedLink
-              href="#intro-video"
-              className="btn btn-video"
-              eventName="intro_video_click"
-              eventLabel="Hero — Watch Intro button"
-              eventCategory="Engagement"
-            >
-              ▶ WATCH INTRO · 90s
-            </TrackedLink>
-          )}
-        </div>
+        ))}
       </div>
-
-      {/* ── INTRO VIDEO — opt-in section below hero ── */}
-      {videoId && (
-        <div className="intro-video-wrap" id="intro-video" data-reveal="">
-          <div className="intro-video-label">
-            <span className="slabel">INTRO.VIDEO</span>
-            <span className="intro-video-meta">
-              WHO IS {(settings?.name ?? "TANVIR").toUpperCase()} · 1:30
-            </span>
-          </div>
-          <div className="video-wrap">
-            <iframe
-              src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`}
-              title={`${settings?.name ?? "Developer"} — intro video`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              loading="lazy"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* ── DIRECTORY LISTING ── */}
-      <div className="manifest-hdr" data-reveal="">
-        PORTFOLIO.MANIFEST &nbsp;·&nbsp;{" "}
-        <em style={{ color: "var(--accent)", fontStyle: "normal" }}>v1.0.0</em>
-        &nbsp;·&nbsp; <BuildStamp />
-      </div>
-
-      <div className="dir-head">
-        <span>IDX</span>
-        <span>PATH</span>
-        <span>ENTRIES</span>
-        <span>TYPE</span>
-        <span>DESC</span>
-      </div>
-
-      {DIR_PAGES.map(({ href, label, idx, entries, type, desc }) => (
-        <Link
-          key={href}
-          href={href}
-          className="dir-row"
-          style={{
-            textDecoration: "none",
-            color: "inherit",
-            display: "grid",
-            gridTemplateColumns: "56px 1fr 90px 110px 120px",
-            padding: "13px 48px",
-            borderBottom: "1px solid var(--border)",
-            transition: "background 0.12s",
-          }}
-        >
-          <span className="di">{idx}</span>
-          <span className="dn">/{label}</span>
-          <span className="ds">{entries}</span>
-          <span className="ds">{type}</span>
-          <span className="dd">{desc}</span>
-        </Link>
-      ))}
 
       {/* Decorative overflow text */}
-      <div
-        className="deco"
-        style={{ position: "relative", marginTop: 0, padding: "0 48px", overflow: "hidden" }}
-      >
+      <div className="deco" style={{ marginTop: 0, padding: "0 48px", overflow: "hidden" }}>
         {settings?.tagline ?? "FULL-STACK DEVELOPER"}
       </div>
     </div>

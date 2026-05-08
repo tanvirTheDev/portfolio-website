@@ -78,6 +78,68 @@ export const siteSettings = defineType({
       type: "string",
       group: "identity",
     }),
+    defineField({
+      name: "skills",
+      title: "Skills / Tech Stack (Ticker)",
+      type: "array",
+      group: "identity",
+      description:
+        "Shown as a scrolling ticker on the homepage. e.g. REACT, NEXT.JS, NODE.JS, TYPESCRIPT",
+      of: [{ type: "string" }],
+    }),
+    defineField({
+      name: "upworkEarnings",
+      title: "Upwork Total Earnings",
+      type: "string",
+      group: "identity",
+      description: "e.g. $50K+  — shown in the broadcast card on the homepage.",
+    }),
+    defineField({
+      name: "introMeta",
+      title: "Intro Video Metadata",
+      type: "object",
+      group: "identity",
+      description: "Details shown in the broadcast frame around the intro video.",
+      fields: [
+        defineField({
+          name: "title",
+          title: "Video Title",
+          type: "string",
+          description: 'e.g. "WHO IS TANVIR AHAMED"',
+        }),
+        defineField({
+          name: "channel",
+          title: "Channel Name",
+          type: "string",
+          description: 'e.g. "TANVIR_DEV"',
+        }),
+        defineField({
+          name: "duration",
+          title: "Duration",
+          type: "string",
+          description: 'e.g. "01:30"',
+        }),
+        defineField({
+          name: "recordedAt",
+          title: "Recorded Date",
+          type: "string",
+          description: 'e.g. "2024-05-01"',
+        }),
+        defineField({
+          name: "location",
+          title: "Location",
+          type: "string",
+          description: 'e.g. "REMOTE / DHAKA"',
+        }),
+        defineField({
+          name: "transmissionId",
+          title: "Transmission ID",
+          type: "string",
+          description: 'e.g. "TX-0001"',
+        }),
+      ],
+      options: { columns: 2 },
+    }),
 
     // ── LINKS ─────────────────────────────────────────────────────────────────
     defineField({

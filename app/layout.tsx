@@ -95,10 +95,39 @@ export const metadata: Metadata = {
   },
 };
 
+// WebSite schema — helps Google create a sitelinks search box and associate
+// the site with the person "Tanvir Ahamed / tanvirthedev"
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Tanvir Ahamed — Portfolio",
+  alternateName: ["tanvirthedev", "Tanvir Ahmed Portfolio", "Tanvir the Dev"],
+  url: SITE_URL,
+  author: {
+    "@type": "Person",
+    name: "Tanvir Ahamed",
+    alternateName: ["Tanvir Ahmed", "tanvirthedev", "Tanvir the Dev"],
+    url: SITE_URL,
+    sameAs: ["https://github.com/tanvirTheDev", "https://www.upwork.com/freelancers/tanvirthedev"],
+  },
+  potentialAction: {
+    "@type": "SearchAction",
+    target: { "@type": "EntryPoint", urlTemplate: `${SITE_URL}/work?q={search_term_string}` },
+    "query-input": "required name=search_term_string",
+  },
+};
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${jetbrainsMono.variable} ${departureMono.variable}`}>
       <head>
+        {/* WebSite structured data — site-level identity for Google + AI */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+        {/* llms.txt — signals AI crawlers where to find plain-text site info */}
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="LLMs information" />
         {/* Google tag (gtag.js) — G-5HLMGC95PB */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}

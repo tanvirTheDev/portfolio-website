@@ -105,9 +105,17 @@ export default async function HomePage() {
       desc: "Get in touch",
     },
     {
+      href: "/about",
+      label: "ABOUT",
+      idx: "007",
+      entries: "1 entry",
+      type: "BIO",
+      desc: "Who is Tanvir",
+    },
+    {
       href: "/play",
       label: "PLAY",
-      idx: "007",
+      idx: "008",
       entries: "1 entry",
       type: "GAME",
       desc: "Sky Shooter",

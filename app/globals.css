@@ -1512,6 +1512,159 @@ svg {
   word-break: break-all;
 }
 
+/* ── ABOUT PAGE ── */
+.about-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  padding: 28px 0 36px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 40px;
+}
+.about-photo {
+  width: 110px;
+  height: 132px;
+  object-fit: cover;
+  object-position: center top;
+  filter: grayscale(100%) contrast(1.15) brightness(0.88);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  transition: filter 0.4s;
+}
+.about-photo:hover {
+  filter: grayscale(0%) contrast(1.05) brightness(0.95);
+}
+.about-identity-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.about-name {
+  font-size: clamp(28px, 5vw, 52px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  text-transform: uppercase;
+  margin: 0;
+}
+.about-aka {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.45;
+  margin: 0;
+}
+.about-alias {
+  color: var(--accent);
+  opacity: 0.85;
+}
+.about-role {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  margin: 0;
+}
+.about-section {
+  margin-bottom: 48px;
+}
+.about-sec-label {
+  font-size: 8px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.6;
+  margin-bottom: 20px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.about-bio {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.about-bio p {
+  font-size: 11px;
+  line-height: 2;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+  margin: 0;
+}
+.about-bio strong {
+  opacity: 1;
+  color: var(--fg);
+}
+.about-skills {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+.about-skill-group-label {
+  font-size: 8px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.4;
+  margin-bottom: 10px;
+}
+.about-skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.about-find-note {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  opacity: 0.45;
+  margin-bottom: 20px;
+  line-height: 1.8;
+}
+.about-find-note em {
+  color: var(--accent);
+  font-style: normal;
+  opacity: 0.8;
+}
+.about-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2px;
+}
+.about-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: var(--fg);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.about-link:hover {
+  border-color: var(--accent);
+  background: rgba(232, 255, 0, 0.04);
+}
+.about-link-label {
+  font-size: 8px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.75;
+}
+.about-link-val {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  opacity: 0.5;
+}
+.about-cta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+
 /* ── CONTACT ── */
 .kinetic-hdr {
   font-size: clamp(52px, 9vw, 130px);

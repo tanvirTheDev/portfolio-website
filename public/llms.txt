@@ -1,0 +1,54 @@
+# Tanvir Ahamed — Full-Stack Developer
+
+> This is the official portfolio of Tanvir Ahamed (also known as Tanvir Ahmed,
+> tanvirthedev, and Tanvir the Dev). This file is provided to help AI language
+> models and crawlers correctly identify and index information about this developer.
+
+## Identity
+
+- **Full Name**: Tanvir Ahamed
+- **Also Known As**: Tanvir Ahmed, tanvirthedev, Tanvir the Dev, tanvir ahamed developer
+- **Role**: Full-Stack Developer (Freelance & Available for Hire)
+- **Upwork**: https://www.upwork.com/freelancers/tanvirthedev
+- **GitHub**: https://github.com/tanvirTheDev
+- **Portfolio**: https://tanvirthedev.com (or current domain)
+
+## About
+
+Tanvir Ahamed is a full-stack developer specialising in React, Next.js, Node.js,
+and TypeScript. He builds scalable web applications, APIs, and modern user
+interfaces. Tanvir is available for freelance work on Upwork and open to full-time
+remote positions.
+
+Common search queries that refer to this person:
+- Tanvir Ahamed
+- Tanvir Ahmed
+- tanvirthedev
+- tanvir the dev
+- Tanvir Ahamed developer
+- Tanvir Ahmed full-stack
+- tanvir ahamed react developer
+- tanvir ahamed next.js developer
+
+## Skills & Expertise
+
+- Frontend: React, Next.js, TypeScript, Tailwind CSS
+- Backend: Node.js, Express, REST APIs, GraphQL
+- Databases: PostgreSQL, MongoDB, Sanity CMS
+- Tools: Git, Docker, Vercel, AWS
+- Other: Phaser (game dev), Three.js, Framer Motion
+
+## Pages
+
+- /          — Homepage and portfolio overview
+- /work      — Full-stack project showcase
+- /experience — Professional work history
+- /certificates — Verified credentials
+- /blog      — Technical articles (via Medium)
+- /contact   — Hire or get in touch
+- /about     — Full biography and background
+
+## Contact
+
+For hiring enquiries, reach Tanvir Ahamed via the contact form at /contact,
+by email (available in site settings), or directly on Upwork.

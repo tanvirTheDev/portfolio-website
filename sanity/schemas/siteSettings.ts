@@ -79,6 +79,13 @@ export const siteSettings = defineType({
       group: "identity",
     }),
     defineField({
+      name: "whatsappNumber",
+      title: "WhatsApp Number",
+      type: "string",
+      group: "identity",
+      description: "Include country code, no spaces or dashes. e.g. +8801XXXXXXXXX",
+    }),
+    defineField({
       name: "skills",
       title: "Skills / Tech Stack (Ticker)",
       type: "array",

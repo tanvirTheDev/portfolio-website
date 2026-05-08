@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Waveform from "./Waveform";
+import StatCounter from "./StatCounter";
 
 interface BroadcastFrameProps {
   // Left rail — transmission metadata
@@ -101,14 +103,13 @@ export default function BroadcastFrame({
           {!playing ? (
             <div className="bc-poster" onClick={() => setPlaying(true)}>
               {youtubeId && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   className="bc-thumb"
                   src={`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`}
                   alt=""
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display = "none";
-                  }}
+                  fill
+                  sizes="(max-width:1100px) 100vw, 60vw"
+                  style={{ objectFit: "cover" }}
                 />
               )}
               <div className="bc-scan" />
@@ -179,8 +180,16 @@ export default function BroadcastFrame({
         {/* Profile photo */}
         <div className="bc-op-photo">
           {profileImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={profileImageUrl} alt={name} />
+            <Image
+              src={profileImageUrl}
+              alt={name}
+              fill
+              sizes="240px"
+              style={{
+                objectFit: "cover",
+                filter: "grayscale(100%) contrast(1.15) brightness(0.88)",
+              }}
+            />
           ) : (
             <span className="bc-op-ph">[PHOTO]</span>
           )}
@@ -193,16 +202,24 @@ export default function BroadcastFrame({
         <div className="bc-op-name">{name}</div>
         <div className="bc-op-title">{role}</div>
 
-        {/* Upwork stats */}
+        {/* Upwork stats — animated counters */}
         <div className="bc-op-stats">
           <div>
             <span className="bc-op-k">UPWORK</span>
-            <span className="bc-op-v acc">{upworkSuccess ?? "—"}</span>
+            <span className="bc-op-v acc">
+              {upworkSuccess != null ? (
+                <StatCounter target={parseInt(upworkSuccess, 10) || 0} suffix="%" duration={1600} />
+              ) : (
+                "—"
+              )}
+            </span>
             <span className="bc-op-sub">JOB SUCCESS</span>
           </div>
           <div>
             <span className="bc-op-k">JOBS</span>
-            <span className="bc-op-v">{upworkJobs ?? "—"}</span>
+            <span className="bc-op-v">
+              {upworkJobs != null ? <StatCounter target={upworkJobs} duration={1400} /> : "—"}
+            </span>
             <span className="bc-op-sub">COMPLETED</span>
           </div>
           <div>

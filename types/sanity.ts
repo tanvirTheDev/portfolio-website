@@ -33,6 +33,9 @@ export type Project = {
   problem?: PortableTextBlock[];
   challenges?: PortableTextBlock[];
   architecture?: PortableTextBlock[];
+  metrics?: string[];
+  testimonial?: string;
+  testimonialAuthor?: string;
 };
 
 // ── Experience ────────────────────────────────────────────────────────────────
@@ -83,6 +86,42 @@ export type ScoreEntry = {
 
 // ── Site Settings ─────────────────────────────────────────────────────────────
 
+// ── Testimonial ───────────────────────────────────────────────────────────────
+
+export type TestimonialPlatform = "upwork" | "linkedin" | "direct" | "other";
+
+export type Testimonial = {
+  _id: string;
+  _type: "testimonial";
+  clientName: string;
+  clientTitle?: string;
+  clientCompany?: string;
+  clientPhoto?: { asset: { url: string } };
+  quote: string;
+  platform?: TestimonialPlatform;
+  rating?: number;
+  featured?: boolean;
+  order?: number;
+};
+
+// ── Service ───────────────────────────────────────────────────────────────────
+
+export type Service = {
+  _id: string;
+  _type: "service";
+  title: string;
+  tagline?: string;
+  icon?: string;
+  description?: string;
+  deliverables?: string[];
+  techStack?: string[];
+  startingPrice?: string;
+  featured?: boolean;
+  order?: number;
+};
+
+// ── IntroMeta ─────────────────────────────────────────────────────────────────
+
 export type IntroMeta = {
   title?: string;
   channel?: string;
@@ -103,6 +142,7 @@ export type SiteSettings = {
   upworkJss?: number;
   upworkJobsCompleted?: number;
   upworkEarnings?: string;
+  whatsappNumber?: string;
   skills?: string[];
   introVideoUrl?: string;
   introMeta?: IntroMeta;

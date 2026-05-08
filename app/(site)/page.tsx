@@ -5,6 +5,8 @@ import {
   getAllProjects,
   getAllExperience,
   getAllCertificates,
+  getFeaturedTestimonials,
+  getAllServices,
 } from "@/lib/sanity/queries";
 import { getMediumPosts } from "@/lib/medium";
 import BuildStamp from "@/components/ui/BuildStamp";
@@ -12,11 +14,13 @@ import KineticTitleLoader from "@/components/physics/KineticTitleLoader";
 import HeroStatus from "@/components/home/HeroStatus";
 import BroadcastFrame from "@/components/home/BroadcastFrame";
 import SkillsTicker from "@/components/home/SkillsTicker";
+import ServicesSection from "@/components/home/ServicesSection";
+import TestimonialsSection from "@/components/home/TestimonialsSection";
+import LatestPosts from "@/components/home/LatestPosts";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export const metadata: Metadata = {
-  // absolute prevents the layout template from appending "| Tanvir Ahamed" again
   title: {
     absolute: "Tanvir Ahamed — Full-Stack Developer",
   },
@@ -46,14 +50,15 @@ function getYouTubeId(url: string): string | null {
 }
 
 export default async function HomePage() {
-  const [settings, projects, experience, certs] = await Promise.all([
+  const [settings, projects, experience, certs, testimonials, services] = await Promise.all([
     getSiteSettings().catch(() => null),
     getAllProjects().catch(() => []),
     getAllExperience().catch(() => []),
     getAllCertificates().catch(() => []),
+    getFeaturedTestimonials().catch(() => []),
+    getAllServices().catch(() => []),
   ]);
 
-  // Fetch blog count only when username is configured
   const blogPosts = settings?.mediumUsername
     ? await getMediumPosts(settings.mediumUsername).catch(() => [])
     : [];
@@ -64,17 +69,10 @@ export default async function HomePage() {
   const isAvailable = availability?.available ?? false;
   const availLabel =
     availability?.label?.trim() || (isAvailable ? "AVAILABLE FOR WORK" : "CURRENTLY ENGAGED");
-
-  // Upwork stats
   const upworkSuccess = settings?.upworkJss != null ? `${settings.upworkJss}%` : undefined;
 
   const DIR_PAGES = [
-    {
-      href: "/work",
-      label: "WORK",
-      idx: "002",
-      desc: `${projects.length} ENTRIES`,
-    },
+    { href: "/work", label: "WORK", idx: "002", desc: `${projects.length} ENTRIES` },
     {
       href: "/experience",
       label: "EXPERIENCE",
@@ -93,27 +91,11 @@ export default async function HomePage() {
       idx: "005",
       desc: blogCount ? `${blogCount} POSTS` : "LIVE RSS FEED",
     },
-    {
-      href: "/contact",
-      label: "CONTACT",
-      idx: "006",
-      desc: "ENCRYPTED CHANNEL",
-    },
-    {
-      href: "/about",
-      label: "ABOUT",
-      idx: "007",
-      desc: "1 ENTRY",
-    },
-    {
-      href: "/play",
-      label: "PLAY",
-      idx: "008",
-      desc: "SKY SHOOTER",
-    },
+    { href: "/contact", label: "CONTACT", idx: "006", desc: "ENCRYPTED CHANNEL" },
+    { href: "/about", label: "ABOUT", idx: "007", desc: "1 ENTRY" },
+    { href: "/play", label: "PLAY", idx: "008", desc: "SKY SHOOTER" },
   ] as const;
 
-  // JSON-LD Person schema — rich structured data for Google + AI crawlers
   const personSchema = {
     "@context": "https://schema.org",
     "@type": "Person",
@@ -138,7 +120,6 @@ export default async function HomePage() {
 
   return (
     <div className="home-v2">
-      {/* ── JSON-LD structured data ── */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
@@ -178,6 +159,9 @@ export default async function HomePage() {
       {/* ── SKILLS TICKER ── */}
       <SkillsTicker skills={settings?.skills} />
 
+      {/* ── SERVICES ── */}
+      <ServicesSection services={services} />
+
       {/* ── DIRECTORY SECTION ── */}
       <div className="dir-section">
         <div className="dir-section-hdr">
@@ -209,10 +193,7 @@ export default async function HomePage() {
             key={href}
             href={href}
             className="dir-row"
-            style={{
-              textDecoration: "none",
-              color: "inherit",
-            }}
+            style={{ textDecoration: "none", color: "inherit" }}
           >
             <span className="di">{idx}</span>
             <span className="dn">/{label}</span>
@@ -227,6 +208,12 @@ export default async function HomePage() {
           </Link>
         ))}
       </div>
+
+      {/* ── TESTIMONIALS ── */}
+      <TestimonialsSection testimonials={testimonials} />
+
+      {/* ── LATEST BLOG POSTS ── */}
+      <LatestPosts posts={blogPosts} />
 
       {/* Decorative overflow text */}
       <div className="deco" style={{ marginTop: 0, padding: "0 48px", overflow: "hidden" }}>

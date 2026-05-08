@@ -1,6 +1,13 @@
 import { groq } from "next-sanity";
 import { cacheLife, cacheTag } from "next/cache";
-import type { Certificate, Experience, Project, SiteSettings } from "@/types/sanity";
+import type {
+  Certificate,
+  Experience,
+  Project,
+  Service,
+  SiteSettings,
+  Testimonial,
+} from "@/types/sanity";
 import { client } from "./client";
 
 // ── Fragments ─────────────────────────────────────────────────────────────────
@@ -13,7 +20,8 @@ const projectFields = groq`
   thumbnail,
   youtubeId, liveUrl, githubUrl,
   stack, features,
-  problem, challenges, architecture
+  problem, challenges, architecture,
+  metrics, testimonial, testimonialAuthor
 `;
 
 // ── Site Settings ─────────────────────────────────────────────────────────────
@@ -21,7 +29,7 @@ const projectFields = groq`
 const SITE_SETTINGS_QUERY = groq`
   *[_type == "siteSettings"][0] {
     _id, _type,
-    name, tagline, email,
+    name, tagline, email, whatsappNumber,
     availability { available, label },
     profileImage { asset -> { url } },
     upworkJss, upworkJobsCompleted, upworkEarnings,
@@ -125,4 +133,56 @@ export async function getAllCertificates(): Promise<Certificate[]> {
   cacheLife("hours");
   cacheTag("certificate");
   return client.fetch(ALL_CERTIFICATES_QUERY);
+}
+
+// ── Testimonials ──────────────────────────────────────────────────────────────
+
+const ALL_TESTIMONIALS_QUERY = groq`
+  *[_type == "testimonial"] | order(order asc) {
+    _id, _type,
+    clientName, clientTitle, clientCompany,
+    clientPhoto { asset -> { url } },
+    quote, platform, rating, featured, order
+  }
+`;
+
+const FEATURED_TESTIMONIALS_QUERY = groq`
+  *[_type == "testimonial" && featured == true] | order(order asc) {
+    _id, _type,
+    clientName, clientTitle, clientCompany,
+    clientPhoto { asset -> { url } },
+    quote, platform, rating, featured, order
+  }
+`;
+
+export async function getAllTestimonials(): Promise<Testimonial[]> {
+  "use cache";
+  cacheLife("days");
+  cacheTag("testimonial");
+  return client.fetch(ALL_TESTIMONIALS_QUERY);
+}
+
+export async function getFeaturedTestimonials(): Promise<Testimonial[]> {
+  "use cache";
+  cacheLife("days");
+  cacheTag("testimonial");
+  return client.fetch(FEATURED_TESTIMONIALS_QUERY);
+}
+
+// ── Services ──────────────────────────────────────────────────────────────────
+
+const ALL_SERVICES_QUERY = groq`
+  *[_type == "service"] | order(order asc) {
+    _id, _type,
+    title, tagline, icon, description,
+    deliverables, techStack, startingPrice,
+    featured, order
+  }
+`;
+
+export async function getAllServices(): Promise<Service[]> {
+  "use cache";
+  cacheLife("days");
+  cacheTag("service");
+  return client.fetch(ALL_SERVICES_QUERY);
 }

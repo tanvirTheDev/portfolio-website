@@ -182,6 +182,34 @@ export default async function ProjectDetailPage({ params }: Props) {
         </div>
       ) : null}
 
+      {/* Impact Metrics */}
+      {project.metrics?.length ? (
+        <div className="proj-sec" data-reveal="">
+          <span className="proj-sec-label">IMPACT · RESULTS</span>
+          <div className="proj-metrics">
+            {project.metrics.map((m, i) => (
+              <div key={i} className="proj-metric">
+                <span className="proj-metric-idx">{String(i + 1).padStart(2, "0")}</span>
+                <span className="proj-metric-val">{m}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {/* Client Quote */}
+      {project.testimonial && (
+        <div className="proj-sec" data-reveal="">
+          <span className="proj-sec-label">CLIENT SAYS</span>
+          <blockquote className="proj-quote">
+            &ldquo;{project.testimonial}&rdquo;
+            {project.testimonialAuthor && (
+              <cite className="proj-quote-author">— {project.testimonialAuthor}</cite>
+            )}
+          </blockquote>
+        </div>
+      )}
+
       {/* Prev / Next navigation */}
       <div className="proj-nav-row">
         {prev ? (

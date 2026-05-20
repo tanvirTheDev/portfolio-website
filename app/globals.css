@@ -2796,7 +2796,7 @@ svg {
 /* ── HERO STATUS BAR ── */
 .hero-status {
   display: grid;
-  grid-template-columns: auto auto auto auto 1fr;
+  grid-template-columns: auto auto auto 1fr;
   gap: 0;
   align-items: center;
   border-bottom: 1px solid var(--border);
@@ -3387,6 +3387,59 @@ svg {
   opacity: 0.35;
 }
 
+/* ── BROADCAST FRAME CTA BUTTONS ── */
+.bc-op-ctas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.bc-op-cta {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  text-decoration: none;
+  display: block;
+  text-align: center;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+  white-space: nowrap;
+}
+.bc-op-cta:hover {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.bc-op-cta.solid {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+.bc-op-cta.solid:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.bc-op-cta.dim {
+  opacity: 0.45;
+  border-color: var(--border);
+}
+.bc-op-cta.dim:hover {
+  opacity: 1;
+  background: none;
+  color: var(--fg);
+  border-color: var(--fg);
+}
+
 /* ── DIRECTORY SECTION (v2) ── */
 .dir-section {
   padding: 0 0 40px;
@@ -3445,16 +3498,18 @@ svg {
   .hero-status {
     grid-template-columns: 1fr 1fr;
   }
-  .hs-actions {
-    grid-column: 1 / -1;
-  }
 }
 @media (max-width: 640px) {
   .hero-status {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
-  .hs-cell {
+  .hs-cell:nth-child(3),
+  .hs-cell:nth-child(4) {
     border-right: none;
+    border-bottom: none;
+  }
+  .hs-cell:nth-child(1),
+  .hs-cell:nth-child(2) {
     border-bottom: 1px solid var(--border);
   }
   .dir-section-hdr {
@@ -3988,6 +4043,268 @@ svg {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   FEATURED PROJECTS (homepage strip)
+   ═══════════════════════════════════════════════════════════════ */
+
+.fp-section {
+  border-bottom: 1px solid var(--border);
+}
+.fp-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 36px 48px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.fp-title {
+  font-size: clamp(28px, 4vw, 52px);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  margin-top: 8px;
+}
+.fp-all-btn {
+  font-size: 10px;
+  padding: 12px 22px;
+}
+.fp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+.fp-card {
+  border-right: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition: background 0.2s;
+}
+.fp-card:last-child {
+  border-right: none;
+}
+.fp-card:hover {
+  background: rgba(232, 255, 0, 0.025);
+}
+.fp-card-img {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #111;
+  border-bottom: 1px solid var(--border);
+}
+.fp-card-no-img {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56px;
+  font-weight: 900;
+  color: var(--fg);
+  opacity: 0.05;
+  letter-spacing: -0.04em;
+}
+.fp-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, rgba(10, 10, 10, 0.65) 100%);
+  transition: opacity 0.2s;
+}
+.fp-card:hover .fp-card-overlay {
+  opacity: 0.5;
+}
+.fp-card-status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  padding: 3px 7px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: var(--bg);
+  text-transform: uppercase;
+}
+.fp-card-body {
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+.fp-card-idx {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  opacity: 0.25;
+}
+.fp-card-title {
+  font-size: clamp(13px, 1.3vw, 18px);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  margin: 0;
+}
+.fp-card-tagline {
+  font-size: 10px;
+  opacity: 0.5;
+  letter-spacing: 0.05em;
+  margin: 0;
+  line-height: 1.5;
+}
+.fp-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 2px;
+}
+.fp-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.fp-card-year {
+  font-size: 8px;
+  letter-spacing: 0.25em;
+  opacity: 0.3;
+}
+.fp-card-cta {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  text-transform: uppercase;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+.fp-card:hover .fp-card-cta {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CTA STRIP (bottom of homepage)
+   ═══════════════════════════════════════════════════════════════ */
+
+.cta-strip {
+  border-top: 1px solid var(--border);
+  padding: 88px 48px 80px;
+  text-align: center;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+.cta-strip-bg-word {
+  position: absolute;
+  font-size: clamp(80px, 22vw, 260px);
+  font-weight: 900;
+  opacity: 0.018;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  letter-spacing: -0.06em;
+  pointer-events: none;
+  white-space: nowrap;
+  user-select: none;
+  text-transform: uppercase;
+}
+.cta-strip-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+.cta-strip-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cta-strip-avail {
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  color: #5fff8f;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.cta-strip-title {
+  font-size: clamp(36px, 7vw, 96px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 0.92;
+  text-transform: uppercase;
+  margin: 0;
+}
+.cta-strip-title span {
+  color: var(--accent);
+}
+.cta-strip-sub {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  opacity: 0.35;
+  text-transform: uppercase;
+  margin: 0;
+}
+.cta-strip-btns {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 12px;
+}
+.cta-strip-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  background: none;
+  border: 1px solid var(--fg);
+  color: var(--fg);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+  white-space: nowrap;
+}
+.cta-strip-btn:hover {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.cta-strip-btn.solid {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.cta-strip-btn.solid:hover {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--bg);
+}
+.cta-strip-btn.dim {
+  opacity: 0.4;
+  border-color: var(--border);
+}
+.cta-strip-btn.dim:hover {
+  opacity: 1;
+  background: none;
+  color: var(--fg);
+  border-color: var(--fg);
+}
+
+/* ═══════════════════════════════════════════════════════════════
    CONTACT — WHATSAPP ACCENT
    ═══════════════════════════════════════════════════════════════ */
 
@@ -4064,14 +4381,42 @@ svg {
     padding: 10px 16px;
     min-height: 48px;
   }
-  .hs-actions {
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 8px 16px;
+
+  /* Featured projects */
+  .fp-hdr {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 24px 20px 16px;
   }
-  .hs-btn {
-    font-size: 8px;
-    padding: 7px 12px;
+  .fp-grid {
+    grid-template-columns: 1fr;
+  }
+  .fp-card {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .fp-card:last-child {
+    border-bottom: none;
+  }
+  .fp-card-body {
+    padding: 16px 20px 20px;
+  }
+
+  /* CTA strip */
+  .cta-strip {
+    padding: 60px 20px 56px;
+  }
+  .cta-strip-btns {
+    flex-direction: column;
+    align-items: center;
+  }
+  .cta-strip-btn {
+    width: 100%;
+    max-width: 300px;
+    justify-content: center;
+    font-size: 9px;
+    padding: 12px 20px;
   }
 
   /* Project metrics */

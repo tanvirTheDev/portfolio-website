@@ -15,8 +15,10 @@ import HeroStatus from "@/components/home/HeroStatus";
 import BroadcastFrame from "@/components/home/BroadcastFrame";
 import SkillsTicker from "@/components/home/SkillsTicker";
 import ServicesSection from "@/components/home/ServicesSection";
+import FeaturedProjects from "@/components/home/FeaturedProjects";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import LatestPosts from "@/components/home/LatestPosts";
+import CTAStrip from "@/components/home/CTAStrip";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -133,7 +135,6 @@ export default async function HomePage() {
         availableText={availLabel}
         isAvailable={isAvailable}
         role={settings?.tagline ?? "FULL-STACK DEVELOPER"}
-        resumeUrl={settings?.resumeFile?.asset?.url}
       />
 
       {/* ── BROADCAST FRAME ── */}
@@ -154,6 +155,7 @@ export default async function HomePage() {
         upworkSuccess={upworkSuccess}
         upworkJobs={settings?.upworkJobsCompleted}
         upworkEarnings={settings?.upworkEarnings}
+        resumeUrl={settings?.resumeFile?.asset?.url}
       />
 
       {/* ── SKILLS TICKER ── */}
@@ -162,12 +164,18 @@ export default async function HomePage() {
       {/* ── SERVICES ── */}
       <ServicesSection services={services} />
 
+      {/* ── TESTIMONIALS ── */}
+      <TestimonialsSection testimonials={testimonials} />
+
+      {/* ── FEATURED PROJECTS ── */}
+      <FeaturedProjects projects={projects} />
+
       {/* ── DIRECTORY SECTION ── */}
       <div className="dir-section">
         <div className="dir-section-hdr">
           <div>
             <span className="slabel" style={{ margin: 0 }}>
-              01 / DIRECTORY
+              NAVIGATE
             </span>
             <div className="dir-section-title">PORTFOLIO_INDEX</div>
           </div>
@@ -209,16 +217,16 @@ export default async function HomePage() {
         ))}
       </div>
 
-      {/* ── TESTIMONIALS ── */}
-      <TestimonialsSection testimonials={testimonials} />
-
       {/* ── LATEST BLOG POSTS ── */}
       <LatestPosts posts={blogPosts} />
 
-      {/* Decorative overflow text */}
-      <div className="deco" style={{ marginTop: 0, padding: "0 48px", overflow: "hidden" }}>
-        {settings?.tagline ?? "FULL-STACK DEVELOPER"}
-      </div>
+      {/* ── CTA STRIP ── */}
+      <CTAStrip
+        isAvailable={isAvailable}
+        availableText={availLabel}
+        upworkUrl={settings?.upworkUrl ?? "https://www.upwork.com/freelancers/tanvirthedev"}
+        resumeUrl={settings?.resumeFile?.asset?.url}
+      />
     </div>
   );
 }

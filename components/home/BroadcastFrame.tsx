@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Image from "next/image";
 import Waveform from "./Waveform";
 import StatCounter from "./StatCounter";
@@ -22,6 +23,7 @@ interface BroadcastFrameProps {
   upworkSuccess?: string; // e.g. "100%"
   upworkJobs?: number; // e.g. 47
   upworkEarnings?: string; // e.g. "$50K+"
+  resumeUrl?: string;
 }
 
 export default function BroadcastFrame({
@@ -38,6 +40,7 @@ export default function BroadcastFrame({
   upworkSuccess,
   upworkJobs,
   upworkEarnings,
+  resumeUrl,
 }: BroadcastFrameProps) {
   const [playing, setPlaying] = useState(false);
   const [frame, setFrame] = useState("00000");
@@ -243,6 +246,21 @@ export default function BroadcastFrame({
             <span>LOAD</span>
             <span>NORM</span>
           </div>
+        </div>
+
+        {/* CTA buttons */}
+        <div className="bc-op-ctas">
+          <Link href="/work" className="bc-op-cta solid">
+            VIEW WORK ↓
+          </Link>
+          <Link href="/contact" className="bc-op-cta">
+            HIRE ME →
+          </Link>
+          {resumeUrl && resumeUrl !== "#" && (
+            <a className="bc-op-cta dim" href={resumeUrl} target="_blank" rel="noopener noreferrer">
+              ↓ RÉSUMÉ
+            </a>
+          )}
         </div>
       </aside>
     </div>

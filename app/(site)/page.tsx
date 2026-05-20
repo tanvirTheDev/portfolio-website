@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import {
   getSiteSettings,
   getAllProjects,
-  getAllExperience,
-  getAllCertificates,
   getFeaturedTestimonials,
   getAllServices,
 } from "@/lib/sanity/queries";
 import { getMediumPosts } from "@/lib/medium";
-import BuildStamp from "@/components/ui/BuildStamp";
 import KineticTitleLoader from "@/components/physics/KineticTitleLoader";
 import HeroStatus from "@/components/home/HeroStatus";
 import BroadcastFrame from "@/components/home/BroadcastFrame";
@@ -52,11 +48,9 @@ function getYouTubeId(url: string): string | null {
 }
 
 export default async function HomePage() {
-  const [settings, projects, experience, certs, testimonials, services] = await Promise.all([
+  const [settings, projects, testimonials, services] = await Promise.all([
     getSiteSettings().catch(() => null),
     getAllProjects().catch(() => []),
-    getAllExperience().catch(() => []),
-    getAllCertificates().catch(() => []),
     getFeaturedTestimonials().catch(() => []),
     getAllServices().catch(() => []),
   ]);
@@ -64,7 +58,6 @@ export default async function HomePage() {
   const blogPosts = settings?.mediumUsername
     ? await getMediumPosts(settings.mediumUsername).catch(() => [])
     : [];
-  const blogCount = blogPosts.length;
 
   const availability = settings?.availability;
   const videoId = settings?.introVideoUrl ? getYouTubeId(settings.introVideoUrl) : null;
@@ -72,31 +65,6 @@ export default async function HomePage() {
   const availLabel =
     availability?.label?.trim() || (isAvailable ? "AVAILABLE FOR WORK" : "CURRENTLY ENGAGED");
   const upworkSuccess = settings?.upworkJss != null ? `${settings.upworkJss}%` : undefined;
-
-  const DIR_PAGES = [
-    { href: "/work", label: "WORK", idx: "002", desc: `${projects.length} ENTRIES` },
-    {
-      href: "/experience",
-      label: "EXPERIENCE",
-      idx: "003",
-      desc: experience.length ? `${experience.length} ROLES` : "—",
-    },
-    {
-      href: "/certificates",
-      label: "CERTIFICATES",
-      idx: "004",
-      desc: certs.length ? `${certs.length} CREDENTIALS` : "—",
-    },
-    {
-      href: "/blog",
-      label: "BLOG",
-      idx: "005",
-      desc: blogCount ? `${blogCount} POSTS` : "LIVE RSS FEED",
-    },
-    { href: "/contact", label: "CONTACT", idx: "006", desc: "ENCRYPTED CHANNEL" },
-    { href: "/about", label: "ABOUT", idx: "007", desc: "1 ENTRY" },
-    { href: "/play", label: "PLAY", idx: "008", desc: "SKY SHOOTER" },
-  ] as const;
 
   const personSchema = {
     "@context": "https://schema.org",
@@ -169,53 +137,6 @@ export default async function HomePage() {
 
       {/* ── FEATURED PROJECTS ── */}
       <FeaturedProjects projects={projects} />
-
-      {/* ── DIRECTORY SECTION ── */}
-      <div className="dir-section">
-        <div className="dir-section-hdr">
-          <div>
-            <span className="slabel" style={{ margin: 0 }}>
-              NAVIGATE
-            </span>
-            <div className="dir-section-title">PORTFOLIO_INDEX</div>
-          </div>
-          <div className="dir-section-meta">
-            v1.0.0 · CHK_7F3A9C
-            <br />
-            COMPILED — <BuildStamp />
-            <br />
-            OWNER {settings?.email ?? "tanvir@portfolio.dev"}
-          </div>
-        </div>
-
-        <div className="dir-head">
-          <span>IDX</span>
-          <span>PATH</span>
-          <span>SIZE</span>
-          <span>NOTES</span>
-          <span>→</span>
-        </div>
-
-        {DIR_PAGES.map(({ href, label, idx, desc }) => (
-          <Link
-            key={href}
-            href={href}
-            className="dir-row"
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            <span className="di">{idx}</span>
-            <span className="dn">/{label}</span>
-            <span className="ds">—</span>
-            <span className="dd">{desc}</span>
-            <span
-              className="ds"
-              style={{ textAlign: "right", color: "var(--accent)", opacity: 0.7 }}
-            >
-              ↗
-            </span>
-          </Link>
-        ))}
-      </div>
 
       {/* ── LATEST BLOG POSTS ── */}
       <LatestPosts posts={blogPosts} />
